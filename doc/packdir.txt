@@ -1,0 +1,50 @@
+John Kortnik's PackDir for RISC OS
+
+PackDir is an archive format that compresses files using LZW compression, or
+stores files without compressing them.
+
+The LZW compression algorithm is the variant used in the zoo archiver.
+
+32bit ints are little endian
+Strings are NULL-terminated ASCII
+
+object date/time (seconds since Unix epoch) is calculated as:
+{
+	32bit_int high = (load & 0xff) - 0x33;
+	32bit_int low;
+
+	low = exec - 0x6e996a00;
+	file_time = high * 42949673 + low / 100;
+	file_time *= 1000;
+}
+
+File format:
+ Header
+ object_entry_1
+ object_entry_2
+ ...
+ object_entry_N
+
+Header:
+ String: "PACK"
+ 32bit int: LZW compress bits - 12
+
+object_entry:
+ string: object_name
+ 32bit int: load (RISC OS load address)
+ 32bit int: exec (RISC OS exec address)
+ 32bit int: if this entry is a directory, then number_of_child_entries, else original file length (origlen)
+ 32bit int: attributes (RISC OS read/write permissions)
+ 32bit int: entry type.
+            1 == direcory entry
+            0 == file entry
+            NB: This field does not exist in the first entry in the file.  The first entry is always a directory.
+
+if entry is a file entry, then these fields follow:
+ 32bit int: Compressed file data length (complen)
+ 32bit int: Compression type
+            -1 == not compressed
+            otherwise == compressed with LZW
+ N bytes: archived file data
+            N == complen if compression type != -1
+            N == origlen if compression type == -1

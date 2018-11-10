@@ -1,0 +1,15 @@
+Compression types:
+Pack: Run length encoding
+Compress: LZW
+Squash: 13 bit LZW
+Crunch: 12 bit LZW followed by Pack
+Squeeze: Run length encoding followed by Huffman coding
+
+
+LZW types:
+UNIX_COMPRESS: Standard Unix compress, with 3 byte header
+SQUASH: 13 bit compress, no header
+ZOO: 13 bit compress, no header, first code is CLEAR
+PACKDIR: Same as zoo, but user must supply the number of bits
+CRUNCH: If bits not specified, then first byte is the bit size
+COMPRESS: Same as crunch
