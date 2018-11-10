@@ -11,11 +11,15 @@ Supported archive formats are:
 
 riscosarc can not create archives, it can only extract files from them.
 
-Usage:
+# Usage:
 java riscosarc [opt] [archive file]
+
 where opt is:
+
   -l: list contents of archive
+
   -v: verbose listing
+
   -x: extract files from archive
 
 Files are extracted with the RISC OS filetype appended to the name.
