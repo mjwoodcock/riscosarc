@@ -104,9 +104,9 @@ public class ArchiveEntry
 		return origlen;
 	}
 
-	public void mkDir()
+	public void mkDir(String prefix)
 	{
-		File f = new File(local_filename);
+		File f = new File(prefix + File.separator + local_filename);
 		File parent = f.getParentFile();
 
 		if (parent != null && !parent.isDirectory())
@@ -116,6 +116,11 @@ public class ArchiveEntry
 				parent.mkdirs();
 			}
 		}
+	}
+
+	public void mkDir()
+	{
+		mkDir("");
 	}
 
 	public boolean isDir()

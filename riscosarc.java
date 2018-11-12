@@ -3,6 +3,7 @@ import riscos.archive.container.SparkFSFile;
 import riscos.archive.container.PackDirFile;
 import riscos.archive.container.SquashFile;
 import riscos.archive.container.ArchiveEntry;
+import java.io.File;
 import java.io.FilterInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,6 +28,7 @@ public class riscosarc
 		boolean do_list = false;
 		boolean do_verbose = false;
 		boolean do_extract = false;
+		String output_directory = "";
 
 		if (args.length < 2)
 		{
@@ -35,7 +37,11 @@ public class riscosarc
 
 		for (int i = 0; i < args.length; i++)
 		{
-			if (args[i].equals("-l"))
+			if (args[i].startsWith("-d"))
+			{
+				output_directory = args[i].substring(2);
+			}
+			else if (args[i].equals("-l"))
 			{
 				do_list = true;
 			}
@@ -106,7 +112,7 @@ public class riscosarc
 				if (do_extract)
 				{
 					entry.cleanOldFile();
-					entry.mkDir();
+					entry.mkDir(output_directory);
 					try {
 						FilterInputStream fis = null;
 						if (sparkfs != null) {
@@ -116,7 +122,7 @@ public class riscosarc
 						} else if (squash != null) {
 							fis = (FilterInputStream)squash.getInputStream(entry);
 						}
-						FileOutputStream fos = new FileOutputStream(entry.getLocalFilename());
+						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename());
 						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());
 						int r = 0;
 						byte buf[] = new byte[1024];
