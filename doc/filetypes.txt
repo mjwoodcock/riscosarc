@@ -1,0 +1,5 @@
+RISC OS filetypes:
+ArcFS: 3fb
+SparcFS: ddc
+PackDir: 68e
+Squash: fca
