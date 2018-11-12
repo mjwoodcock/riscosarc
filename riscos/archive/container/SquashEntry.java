@@ -20,12 +20,16 @@ public class SquashEntry extends ArchiveEntry
 		append_filetype = true;
 		File f = new File(fname);
 		file_length = f.length();
-		int idx = fname.indexOf(",fca");
+		String basename = f.toPath().getFileName().toString();
+		int idx = basename.indexOf(",fca");
 		if (idx == -1) {
-			idx = fname.indexOf(".fca");
+			idx = basename.indexOf(".fca");
 		}
-		if (idx == fname.length() - 4) {
-			local_filename = fname.substring(0, idx);
+		if (idx == basename.length() - 4) {
+			local_filename = basename.substring(0, idx);
+			name = local_filename;
+		} else {
+			local_filename = basename;
 			name = local_filename;
 		}
 	}
