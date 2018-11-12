@@ -1,3 +1,1 @@
 1. Filename translation: Convert '/' to '.' and vice-versa.
-2. Make all the containers implement a common interface and create a
-   factory class.

@@ -2,6 +2,7 @@ package riscos.archive.container;
 
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidSquashFile;
+import riscos.archive.InvalidArchiveFile;
 import riscos.archive.LZWInputStream;
 import riscos.archive.LimitInputStream;
 import java.io.IOException;
@@ -9,7 +10,7 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class SquashFile
+public class SquashFile extends ArchiveFile
 {
 	private RandomAccessInputStream in_file;
 	private String archive_file;
@@ -33,6 +34,11 @@ public class SquashFile
 		return r;
 	}
 
+	public int read16() throws IOException
+	{
+		return 0xffffffff;
+	}
+
 	public String readString(int len) throws IOException
 	{
 		StringBuffer s = new StringBuffer();
@@ -50,7 +56,7 @@ public class SquashFile
 		return s.toString();
 	}
 
-	private void readHeader() throws InvalidSquashFile
+	private void readHeader() throws InvalidArchiveFile
 	{
 		try
 		{
@@ -66,7 +72,7 @@ public class SquashFile
 		}
 	}
 
-	public void openForRead() throws IOException, InvalidSquashFile
+	public void openForRead() throws IOException, InvalidArchiveFile
 	{
 		in_file = new RandomAccessInputStream(archive_file);
 
@@ -91,7 +97,7 @@ public class SquashFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidSquashFile
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile
 	{
 		try {
 			in_file.seek(entry.getOffset());
@@ -106,5 +112,10 @@ public class SquashFile
 
 	public void printInfo()
 	{
+	}
+
+	public byte[] getPasswd()
+	{
+		return null;
 	}
 }

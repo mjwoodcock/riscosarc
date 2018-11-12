@@ -1,8 +1,6 @@
 package riscos.archive;
 
-import java.lang.Exception;
-
-public class InvalidSquashFile extends Exception
+public class InvalidSquashFile extends InvalidArchiveFile
 {
 	public InvalidSquashFile()
 	{

@@ -1,8 +1,9 @@
 package riscos.archive;
 
 import java.lang.Exception;
+import riscos.archive.InvalidArchiveFile;
 
-public class InvalidSparkFSFile extends Exception
+public class InvalidSparkFSFile extends InvalidArchiveFile
 {
 	public InvalidSparkFSFile()
 	{

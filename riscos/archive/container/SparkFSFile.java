@@ -3,6 +3,8 @@ package riscos.archive.container;
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidSparkCompressionType;
 import riscos.archive.InvalidSparkFSFile;
+import riscos.archive.InvalidCompressionType;
+import riscos.archive.InvalidArchiveFile;
 import riscos.archive.LZWInputStream;
 import riscos.archive.GarbleInputStream;
 import riscos.archive.LimitInputStream;
@@ -12,7 +14,7 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class SparkFSFile
+public class SparkFSFile extends ArchiveFile
 {
 	public static final int CT_NOTCOMP = 0x01;
 	public static final int CT_NOTCOMP2 = 0x02;
@@ -77,7 +79,7 @@ public class SparkFSFile
 		return r;
 	}
 
-	private void readHeader() throws InvalidSparkFSFile
+	private void readHeader() throws InvalidArchiveFile
 	{
 		try
 		{
@@ -95,7 +97,7 @@ public class SparkFSFile
 		}
 	}
 
-	public void openForRead() throws IOException, InvalidSparkFSFile
+	public void openForRead() throws IOException, InvalidArchiveFile
 	{
 		in_file = new RandomAccessInputStream(archive_file);
 
@@ -158,7 +160,7 @@ public class SparkFSFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidSparkFSFile, InvalidSparkCompressionType
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
 	{
 		try {
 			in_file.seek(entry.getOffset());

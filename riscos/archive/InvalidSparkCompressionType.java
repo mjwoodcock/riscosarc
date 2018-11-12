@@ -1,8 +1,8 @@
 package riscos.archive;
 
-import java.lang.Exception;
+import riscos.archive.InvalidCompressionType;
 
-public class InvalidSparkCompressionType extends Exception
+public class InvalidSparkCompressionType extends InvalidCompressionType
 {
 	public InvalidSparkCompressionType()
 	{

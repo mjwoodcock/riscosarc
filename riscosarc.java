@@ -1,8 +1,6 @@
 import riscos.archive.*;
-import riscos.archive.container.SparkFSFile;
-import riscos.archive.container.ArcFSFile;
-import riscos.archive.container.PackDirFile;
-import riscos.archive.container.SquashFile;
+import riscos.archive.container.ArchiveFile;
+import riscos.archive.container.ArchiveFileFactory;
 import riscos.archive.container.ArchiveEntry;
 import java.io.File;
 import java.io.FilterInputStream;
@@ -61,46 +59,14 @@ public class riscosarc
 		}
 
 		Enumeration<ArchiveEntry> ent = null;
-		PackDirFile packdir = null;
-		SparkFSFile sparkfs = null;
-		ArcFSFile arcfs = null;
-		SquashFile squash = null;
+		ArchiveFileFactory aff;
+		ArchiveFile af;
 		try {
-			packdir = new PackDirFile(args[args.length - 1]);
-			packdir.openForRead();
-			ent = packdir.entries();
+			aff = new ArchiveFileFactory(args[args.length - 1]);
+			af = aff.getArchiveFile();
+			ent = af.entries();
 		} catch (Exception e) {
-			packdir = null;
-		}
-
-		if (ent == null) {
-			sparkfs = new SparkFSFile(args[args.length - 1], null);
-			try {
-				sparkfs.openForRead();
-				ent = sparkfs.entries();
-			} catch (Exception e) {
-				sparkfs = null;
-			}
-		}
-
-		if (ent == null) {
-			arcfs = new ArcFSFile(args[args.length - 1], null);
-			try {
-				arcfs.openForRead();
-				ent = arcfs.entries();
-			} catch (Exception e) {
-				arcfs = null;
-			}
-		}
-
-		if (ent == null) {
-			squash = new SquashFile(args[args.length - 1]);
-			try {
-				squash.openForRead();
-				ent = squash.entries();
-			} catch (Exception e) {
-				squash = null;
-			}
+			af = null;
 		}
 
 		if (ent == null) {
@@ -127,14 +93,8 @@ public class riscosarc
 					entry.mkDir(output_directory);
 					try {
 						FilterInputStream fis = null;
-						if (sparkfs != null) {
-							fis = (FilterInputStream)sparkfs.getInputStream(entry);
-						} else if (packdir != null) {
-							fis = (FilterInputStream)packdir.getInputStream(entry);
-						} else if (squash != null) {
-							fis = (FilterInputStream)squash.getInputStream(entry);
-						} else if (arcfs != null) {
-							fis = (FilterInputStream)arcfs.getInputStream(entry);
+						if (af != null) {
+							fis = (FilterInputStream)af.getInputStream(entry);
 						}
 						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename());
 						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());

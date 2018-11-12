@@ -1,8 +1,6 @@
 package riscos.archive;
 
-import java.lang.Exception;
-
-public class InvalidArcFSCompressionType extends Exception
+public class InvalidArcFSCompressionType extends InvalidCompressionType
 {
 	public InvalidArcFSCompressionType()
 	{

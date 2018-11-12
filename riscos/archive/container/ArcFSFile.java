@@ -3,6 +3,8 @@ package riscos.archive.container;
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidArcFSCompressionType;
 import riscos.archive.InvalidArcFSFile;
+import riscos.archive.InvalidCompressionType;
+import riscos.archive.InvalidArchiveFile;
 import riscos.archive.LZWInputStream;
 import riscos.archive.GarbleInputStream;
 import riscos.archive.LimitInputStream;
@@ -12,7 +14,7 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class ArcFSFile
+public class ArcFSFile extends ArchiveFile
 {
 	public static final int ARCFS_STORE = 0x82;
 	public static final int ARCFS_PACK = 0x83;
@@ -69,7 +71,7 @@ public class ArcFSFile
 		return r;
 	}
 
-	private void readHeader() throws InvalidArcFSFile
+	private void readHeader() throws InvalidArchiveFile
 	{
 		try
 		{
@@ -102,7 +104,7 @@ public class ArcFSFile
 		}
 	}
 
-	private void readArcfsHeader() throws IOException, InvalidArcFSFile
+	private void readArcfsHeader() throws IOException, InvalidArchiveFile
 	{
 		header_length = read32();
 		data_start = read32();
@@ -120,7 +122,7 @@ public class ArcFSFile
 
 	}
 
-	public void openForRead() throws IOException, InvalidArcFSFile
+	public void openForRead() throws IOException, InvalidArchiveFile
 	{
 		in_file = new RandomAccessInputStream(archive_file);
 
@@ -184,7 +186,7 @@ public class ArcFSFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArcFSFile, InvalidArcFSCompressionType
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
 	{
 		try {
 			in_file.seek(entry.getOffset());

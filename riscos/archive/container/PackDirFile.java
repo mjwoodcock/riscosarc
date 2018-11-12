@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class PackDirFile
+public class PackDirFile extends ArchiveFile
 {
 	public static final int CT_NOTCOMP = 0x01;
 	public static final int CT_LZW = 0x07;
@@ -32,6 +32,11 @@ public class PackDirFile
 		dir_entriesi = -1;
 		num_files = 0;
 		num_dirs = 0;
+	}
+
+	public byte[] getPasswd()
+	{
+		return null;
 	}
 
 	public int read32() throws IOException
@@ -73,7 +78,7 @@ public class PackDirFile
 		return s.toString();
 	}
 
-	private void readHeader() throws InvalidPackDirFile
+	private void readHeader() throws InvalidArchiveFile
 	{
 		try
 		{
@@ -94,7 +99,7 @@ public class PackDirFile
 		}
 	}
 
-	public void openForRead() throws IOException, InvalidPackDirFile
+	public void openForRead() throws IOException, InvalidArchiveFile
 	{
 		in_file = new RandomAccessInputStream(archive_file);
 
@@ -161,7 +166,7 @@ public class PackDirFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidPackDirFile, InvalidPackDirCompressionType
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
 	{
 		try {
 			in_file.seek(entry.getOffset());

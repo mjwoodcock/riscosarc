@@ -1,8 +1,6 @@
 package riscos.archive;
 
-import java.lang.Exception;
-
-public class InvalidArcFSFile extends Exception
+public class InvalidArcFSFile extends InvalidArchiveFile
 {
 	public InvalidArcFSFile()
 	{
