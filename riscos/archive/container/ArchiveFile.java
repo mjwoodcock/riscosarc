@@ -11,11 +11,7 @@ public abstract class ArchiveFile
 	public abstract byte[] getPasswd();
 	public abstract int read32() throws IOException;
 	public abstract int read16() throws IOException;
-	public abstract void openForRead() throws IOException, InvalidArchiveFile;;;;
+	public abstract void openForRead() throws IOException, InvalidArchiveFile;
 	public abstract Enumeration<ArchiveEntry> entries();
 	public abstract InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType;
-	public void stuff()
-	{
-		System.out.println("mjw... in stuff");
-	}
 }
