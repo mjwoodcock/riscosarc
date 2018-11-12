@@ -200,16 +200,12 @@ public class ArcFSFile
 		switch (entry.getCompressType())
 		{
 		case ARCFS_STORE:
-			System.out.println("mjw... store");
 			return gis;
 		case ARCFS_COMPRESS:
-			System.out.println("mjw... compress");
 			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS, entry.getMaxBits());
 		case ARCFS_PACK:
-			System.out.println("mjw... pack");
 			return new PackInputStream(gis);
 		case ARCFS_CRUNCH:
-			System.out.println("mjw... crunch");
 			return new PackInputStream(new LZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
 		default:
 			throw new InvalidArcFSCompressionType();
