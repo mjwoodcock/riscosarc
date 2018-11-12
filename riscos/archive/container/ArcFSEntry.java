@@ -1,7 +1,7 @@
 package riscos.archive.container;
 
 import riscos.archive.*;
-import riscos.archive.container.SparkFSFile;
+import riscos.archive.container.ArcFSFile;
 import riscos.archive.container.ArchiveEntry;
 import java.io.FilterInputStream;
 import java.io.FileOutputStream;
@@ -9,17 +9,18 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
 
-public class SparkFSEntry extends ArchiveEntry
+public class ArcFSEntry extends ArchiveEntry
 {
-	public static final int SPARKFS_ENDDIR = 0x0;
+	public static final int ARCFS_ENDDIR = 0x0;
+	public static final int ARCFS_DELETED = 0x1;
 	public static final int ARCHPACK = 0x80;
 
-	private SparkFSFile spark_file;
+	private ArcFSFile spark_file;
 
 	private long entry_offset;
 	private long next_entry_offset;
 
-	public SparkFSEntry(SparkFSFile spark, RandomAccessInputStream in, int dat_start)
+	public ArcFSEntry(ArcFSFile spark, RandomAccessInputStream in, int dat_start)
 	{
 		super(in, dat_start);
 		spark_file = spark;
@@ -28,38 +29,29 @@ public class SparkFSEntry extends ArchiveEntry
 		append_filetype = true;
 	}
 
-	private void readSparkEntry(String cur_dir) throws IOException
+	private void readArcfsEntry(String cur_dir) throws IOException
 	{
-		int date;
-		int time;
+		byte n[] = new byte[12];
+		n[11] = 0;
 		int r = in_file.read();
-
 		if (r == -1)
 		{
 			is_eof = true;
-			return;
 		}
-
 		comptype = r & 0xff;
-		if ((comptype & ~ARCHPACK) == 0)
+		if (comptype == 0x1)
 		{
-			comptype = SPARKFS_ENDDIR;
-			return;
+			is_del = true;
 		}
-		
-		byte n[] = new byte[14];
-		n[12] = '\0';
 		in_file.read(n, 0, n.length - 1);
 		int nul;
 		for (nul = 0; nul < n.length; nul++)
 		{
-			if (n[nul] < ' ' || n[nul] > '~')
+			if (n[nul] == 0)
 			{
-				n[nul] = '\0';
 				break;
 			}
 		}
-
 		name = new String(n, 0, nul);
 		if (!cur_dir.equals(""))
 		{
@@ -69,40 +61,27 @@ public class SparkFSEntry extends ArchiveEntry
 		{
 			local_filename = name;
 		}
+		origlen = spark_file.read32();
+		load = spark_file.read32();
+		exec = spark_file.read32();
+		int a = spark_file.read32();
+		crc = (a >> 16) & 0xffff;
+		attr = a & 0xff;
+		maxbits = ((a & 0xff00) >> 8) & 0xff;
 		complen = spark_file.read32();
-		date = spark_file.read16();
-		time = spark_file.read16();
-		crc = spark_file.read16();
-		if ((comptype & ~ARCHPACK) > SparkFSFile.CT_NOTCOMP)
-		{
-			origlen = spark_file.read32();
-		}
-		else
-		{
-			origlen = complen;
-		}
-		if ((comptype & ARCHPACK) == ARCHPACK)
-		{
-			load = spark_file.read32();
-			exec = spark_file.read32();
-			attr = spark_file.read32();
-		}
-		comptype &= ~ARCHPACK;
-		seek = (int)in_file.getFilePointer();
-		if ((load & 0xffffff00) == 0xfffddc00)
+		int info_word = spark_file.read32();
+		seek = (info_word & 0x7fffffff) + data_start;
+		if (((info_word >> 31) & 0x1) != 0)
 		{
 			is_dir = true;
 		}
-		if (is_dir)
-		{
-			next_entry_offset = seek + 1;
-		}
 		else
 		{
-			next_entry_offset = seek + complen + 1;
+			is_dir = false;
 		}
-		calculateFileTime();
 		appendFiletype();
+		calculateFileTime();
+		next_entry_offset = in_file.getFilePointer();
 	}
 
 	public void readEntry(String cur_dir, long offset) throws IOException
@@ -110,7 +89,7 @@ public class SparkFSEntry extends ArchiveEntry
 		in_file.seek(offset);
 		entry_offset = in_file.getFilePointer();
 
-		readSparkEntry(cur_dir);
+		readArcfsEntry(cur_dir);
 	}
 
 	public void printEntryData()

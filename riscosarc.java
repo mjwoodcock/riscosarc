@@ -1,5 +1,6 @@
 import riscos.archive.*;
 import riscos.archive.container.SparkFSFile;
+import riscos.archive.container.ArcFSFile;
 import riscos.archive.container.PackDirFile;
 import riscos.archive.container.SquashFile;
 import riscos.archive.container.ArchiveEntry;
@@ -18,7 +19,7 @@ public class riscosarc
 		System.err.println("Usage: java riscosarc <argument> <file>");
 		System.err.println("  argument can be:");
 		System.err.println("  -l: list contents of file");
-		System.err.println("  -lv: verbose list contents of file");
+		System.err.println("  -v: verbose list contents of file");
 		System.err.println("  -x: extract file");
 		System.exit(1);
 	}
@@ -28,7 +29,7 @@ public class riscosarc
 		boolean do_list = false;
 		boolean do_verbose = false;
 		boolean do_extract = false;
-		String output_directory = "";
+		String output_directory = ".";
 
 		if (args.length < 2)
 		{
@@ -62,6 +63,7 @@ public class riscosarc
 		Enumeration<ArchiveEntry> ent = null;
 		PackDirFile packdir = null;
 		SparkFSFile sparkfs = null;
+		ArcFSFile arcfs = null;
 		SquashFile squash = null;
 		try {
 			packdir = new PackDirFile(args[args.length - 1]);
@@ -78,6 +80,16 @@ public class riscosarc
 				ent = sparkfs.entries();
 			} catch (Exception e) {
 				sparkfs = null;
+			}
+		}
+
+		if (ent == null) {
+			arcfs = new ArcFSFile(args[args.length - 1], null);
+			try {
+				arcfs.openForRead();
+				ent = arcfs.entries();
+			} catch (Exception e) {
+				arcfs = null;
 			}
 		}
 
@@ -121,6 +133,8 @@ public class riscosarc
 							fis = (FilterInputStream)packdir.getInputStream(entry);
 						} else if (squash != null) {
 							fis = (FilterInputStream)squash.getInputStream(entry);
+						} else if (arcfs != null) {
+							fis = (FilterInputStream)arcfs.getInputStream(entry);
 						}
 						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename());
 						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());

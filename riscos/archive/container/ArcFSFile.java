@@ -1,8 +1,8 @@
 package riscos.archive.container;
 
 import riscos.archive.RandomAccessInputStream;
-import riscos.archive.InvalidSparkCompressionType;
-import riscos.archive.InvalidSparkFSFile;
+import riscos.archive.InvalidArcFSCompressionType;
+import riscos.archive.InvalidArcFSFile;
 import riscos.archive.LZWInputStream;
 import riscos.archive.GarbleInputStream;
 import riscos.archive.LimitInputStream;
@@ -12,29 +12,26 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class SparkFSFile
+public class ArcFSFile
 {
-	public static final int CT_NOTCOMP = 0x01;
-	public static final int CT_NOTCOMP2 = 0x02;
-	public static final int CT_PACK = 0x03;
-	public static final int CT_PACKSQUEEZE = 0x04;
-	public static final int CT_LZOLD = 0x05;
-	public static final int CT_LZNEW = 0x06;
-	public static final int CT_LZW = 0x07;
-	public static final int CT_CRUNCH = 0x08;
-	public static final int CT_SQUASH = 0x09;
-	public static final int CT_COMP = 0x7f;
+	public static final int ARCFS_STORE = 0x82;
+	public static final int ARCFS_PACK = 0x83;
+	public static final int ARCFS_CRUNCH = 0x88;
+	public static final int ARCFS_COMPRESS = 0xff;
 
-	private static final byte SPARKFS_STARTBYTE = 0x1a;
+	private static final byte ARCFS_HEADER_SIZE = 36;
 	private RandomAccessInputStream in_file;
 	private String archive_file;
 	private int header_length;
 	private int data_start;
+	private int version;
+	private int rw_version;
+	private int arc_format;
 	private String current_dir;
 	private Vector<ArchiveEntry> entry_list;
 	private byte passwd[];
 
-	public SparkFSFile(String filename, String pass)
+	public ArcFSFile(String filename, String pass)
 	{
 		archive_file = filename;
 		entry_list = new Vector<ArchiveEntry>();
@@ -48,11 +45,6 @@ public class SparkFSFile
 	public byte[] getPasswd()
 	{
 		return passwd;
-	}
-
-	public boolean isArcfs()
-	{
-		return false;
 	}
 
 	public int read32() throws IOException
@@ -77,34 +69,69 @@ public class SparkFSFile
 		return r;
 	}
 
-	private void readHeader() throws InvalidSparkFSFile
+	private void readHeader() throws InvalidArcFSFile
 	{
 		try
 		{
 			byte b;
 
 			b = (byte)in_file.read();
-			if (b != SPARKFS_STARTBYTE)
+			if (b == 'A')
 			{
-				throw new InvalidSparkFSFile();
+				byte h[] = new byte[7];
+				in_file.read(h);
+				if (!(h[0] == 'r'
+					&& h[1] == 'c'
+					&& h[2] == 'h'
+					&& h[3] == 'i'
+					&& h[4] == 'v'
+					&& h[5] == 'e'
+					&& h[6] == 0))
+				{
+					throw new InvalidArcFSFile();
+				}
+			}
+			else
+			{
+				throw new InvalidArcFSFile();
 			}
 		}
 		catch (IOException e)
 		{
-			throw new InvalidSparkFSFile();
+			throw new InvalidArcFSFile();
 		}
 	}
 
-	public void openForRead() throws IOException, InvalidSparkFSFile
+	private void readArcfsHeader() throws IOException, InvalidArcFSFile
+	{
+		header_length = read32();
+		data_start = read32();
+		version = read32();
+		if (version > 40)
+		{
+			throw new InvalidArcFSFile();
+		}
+		rw_version = read32();
+		arc_format = read32();
+		for (int i = 0; i < 17; i++)
+		{
+			read32(); // reserved
+		}
+
+	}
+
+	public void openForRead() throws IOException, InvalidArcFSFile
 	{
 		in_file = new RandomAccessInputStream(archive_file);
 
 		readHeader();
+		readArcfsHeader();
 
 		long offset = in_file.getFilePointer();
-		do
+		int num_entries = header_length / 36;
+		for (int i = 0; i < num_entries; i++)
 		{
-			SparkFSEntry fse = new SparkFSEntry(this, in_file, data_start);
+			ArcFSEntry fse = new ArcFSEntry(this, in_file, data_start);
 			try
 			{
 				fse.readEntry(current_dir, offset);
@@ -112,7 +139,7 @@ public class SparkFSFile
 				{
 					break;
 				}
-				if (fse.getCompressType() == SparkFSEntry.SPARKFS_ENDDIR)
+				if (fse.getCompressType() == ArcFSEntry.ARCFS_ENDDIR)
 				{
 					offset += 2;
 					int idx = current_dir.lastIndexOf('/');
@@ -124,9 +151,8 @@ public class SparkFSFile
 					{
 						current_dir = "";
 					}
-					continue;
 				}
-				else
+				else if (fse.getCompressType() != ArcFSEntry.ARCFS_DELETED)
 				{
 					if (fse.isDir())
 					{
@@ -150,7 +176,7 @@ public class SparkFSFile
 			{
 				System.err.println(e.toString());
 			}
-		} while (true);
+		}
 	}
 
 	public Enumeration<ArchiveEntry> entries()
@@ -158,36 +184,44 @@ public class SparkFSFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidSparkFSFile, InvalidSparkCompressionType
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArcFSFile, InvalidArcFSCompressionType
 	{
 		try {
 			in_file.seek(entry.getOffset());
 		} catch (IOException e) {
-			throw new InvalidSparkFSFile();
+			throw new InvalidArcFSFile();
 		}
 
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
 		GarbleInputStream gis = new GarbleInputStream(lis, passwd);
 
+		gis.consumePasswdChar();
+
 		switch (entry.getCompressType())
 		{
-		case CT_NOTCOMP:
-		case CT_NOTCOMP2:
+		case ARCFS_STORE:
+			System.out.println("mjw... store");
 			return gis;
-		case CT_COMP:
-			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS);
-		case CT_PACK:
+		case ARCFS_COMPRESS:
+			System.out.println("mjw... compress");
+			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS, entry.getMaxBits());
+		case ARCFS_PACK:
+			System.out.println("mjw... pack");
 			return new PackInputStream(gis);
-		case CT_CRUNCH:
+		case ARCFS_CRUNCH:
+			System.out.println("mjw... crunch");
 			return new PackInputStream(new LZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
 		default:
-			throw new InvalidSparkCompressionType();
+			throw new InvalidArcFSCompressionType();
 		}
 	}
 
-	public void printSparkInfo()
+	public void printArcFSInfo()
 	{
 		System.out.println("Header length = " + header_length);
 		System.out.println("Data start = " + data_start);
+		System.out.println("Version = " + version / 100 + "." + version % 100);
+		System.out.println("RW Version = " + rw_version / 100 + "." + rw_version % 100);
+		System.out.println("Arc format = " + arc_format);
 	}
 }
