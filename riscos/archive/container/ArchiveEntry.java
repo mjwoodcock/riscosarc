@@ -40,11 +40,12 @@ public class ArchiveEntry
 
 	protected void calculateFileTime()
 	{
-		long high = (load & 0xff) - 0x33;
+		long high = (load & 0xff) - 0x33 & 0xffffffffl;
 		long low;
+		long lexec = ((long)exec) & 0xffffffffl;
 
-		low = exec - 0x6e996a00;
-		file_date = high * 42949673 + low / 100;
+		low = (lexec - 0x6e996a00l) & 0xffffffffl;
+		file_date = (high * 42949673 + low / 100) & 0xffffffffl;
 		file_date *= 1000;
 	}
 
