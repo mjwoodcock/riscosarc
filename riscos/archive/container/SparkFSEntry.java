@@ -28,7 +28,7 @@ public class SparkFSEntry extends ArchiveEntry
 		append_filetype = true;
 	}
 
-	private void readSparkEntry(String cur_dir) throws IOException
+	private void readSparkEntry(String cur_dir) throws IOException, InvalidSparkFSFile
 	{
 		int date;
 		int time;
@@ -80,6 +80,10 @@ public class SparkFSEntry extends ArchiveEntry
 			local_filename = ArchiveEntry.translateFilename(name);
 		}
 		complen = spark_file.read32();
+		if (complen < 0)
+		{
+			throw new InvalidSparkFSFile();
+		}
 		date = spark_file.read16();
 		time = spark_file.read16();
 		crc = spark_file.read16();
@@ -115,7 +119,7 @@ public class SparkFSEntry extends ArchiveEntry
 		appendFiletype();
 	}
 
-	public void readEntry(String cur_dir, long offset) throws IOException
+	public void readEntry(String cur_dir, long offset) throws IOException, InvalidSparkFSFile
 	{
 		in_file.seek(offset);
 		entry_offset = in_file.getFilePointer();

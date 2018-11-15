@@ -148,9 +148,10 @@ public class SparkFSFile extends ArchiveFile
 				}
 				offset = fse.getNextEntryOffset();
 			}
-			catch (IOException e)
+			catch (Exception e)
 			{
 				System.err.println(e.toString());
+				break;
 			}
 		} while (true);
 	}
