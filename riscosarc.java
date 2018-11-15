@@ -16,6 +16,7 @@ public class riscosarc
 	{
 		System.err.println("Usage: java riscosarc <argument> <file>");
 		System.err.println("  argument can be:");
+		System.err.println("  -g<password>: Set password to <password>");
 		System.err.println("  -l: list contents of file");
 		System.err.println("  -v: verbose list contents of file");
 		System.err.println("  -x: extract file");
@@ -28,6 +29,7 @@ public class riscosarc
 		boolean do_verbose = false;
 		boolean do_extract = false;
 		String output_directory = ".";
+		String password = null;
 
 		if (args.length < 2)
 		{
@@ -39,6 +41,10 @@ public class riscosarc
 			if (args[i].startsWith("-d"))
 			{
 				output_directory = args[i].substring(2);
+			}
+			else if (args[i].startsWith("-g"))
+			{
+				password = args[i].substring(2);
 			}
 			else if (args[i].equals("-l"))
 			{
@@ -62,7 +68,7 @@ public class riscosarc
 		ArchiveFileFactory aff;
 		ArchiveFile af;
 		try {
-			aff = new ArchiveFileFactory(args[args.length - 1]);
+			aff = new ArchiveFileFactory(args[args.length - 1], password);
 			af = aff.getArchiveFile();
 			ent = af.entries();
 		} catch (Exception e) {
