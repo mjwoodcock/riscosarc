@@ -71,6 +71,7 @@ public class BitInputStream extends FilterInputStream
 				{
 					return -1;
 				}
+				bits_avail = 0;
 				byte_bufi = 0;
 				byte_buf_len = r;
 			}
