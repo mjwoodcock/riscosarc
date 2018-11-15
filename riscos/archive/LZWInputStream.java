@@ -40,9 +40,6 @@ public class LZWInputStream extends FilterInputStream
 
 	private boolean got_header;
 
-	private byte ncr_prevbyte;
-	private int ncr_running;
-
 	protected CRC32 crc;
 	protected boolean eos;
 
@@ -272,7 +269,6 @@ public class LZWInputStream extends FilterInputStream
 			hash.put(i, ent);
 		}
 		got_header = false;
-		ncr_running = 0;
 		free_ent = LZWConstants.FIRST;
 	}
 
