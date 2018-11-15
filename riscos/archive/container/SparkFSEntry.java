@@ -63,11 +63,11 @@ public class SparkFSEntry extends ArchiveEntry
 		name = new String(n, 0, nul);
 		if (!cur_dir.equals(""))
 		{
-			local_filename = cur_dir + "/" + name;
+			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
 		}
 		else
 		{
-			local_filename = name;
+			local_filename = ArchiveEntry.translateFilename(name);
 		}
 		complen = spark_file.read32();
 		date = spark_file.read16();

@@ -89,6 +89,27 @@ public class ArchiveEntry
 		}
 	}
 
+	protected static String translateFilename(String roname)
+	{
+		String localname = "";
+
+		for (int i = 0; i < roname.length(); i++ ) {
+			switch (roname.charAt(i)) {
+				case '/':
+					localname += '.';
+					break;
+				case '.':
+					localname += '/';
+					break;
+				default:
+					localname += roname.charAt(i);
+					break;
+			}
+		}
+
+		return localname;
+	}
+
 	public int getCompressedLength()
 	{
 		return complen;
