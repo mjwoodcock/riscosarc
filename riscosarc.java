@@ -30,6 +30,7 @@ public class riscosarc
 		boolean do_extract = false;
 		String output_directory = ".";
 		String password = null;
+		boolean error = false;
 
 		if (args.length < 2)
 		{
@@ -72,6 +73,7 @@ public class riscosarc
 			af = aff.getArchiveFile();
 			ent = af.entries();
 		} catch (Exception e) {
+			error = true;
 			af = null;
 		}
 
@@ -120,6 +122,7 @@ public class riscosarc
 					} catch (Exception e) {
 						System.out.println(e.toString());
 						e.printStackTrace(System.out);
+						error = true;
 					}
 				}
 			}
@@ -127,6 +130,11 @@ public class riscosarc
 		catch (Exception e)
 		{
 			System.err.println(e.toString());
+			error = true;
+		}
+
+		if (error) {
+			System.exit(1);
 		}
 	}
 }
