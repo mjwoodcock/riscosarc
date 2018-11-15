@@ -6,6 +6,6 @@ public abstract class InvalidCompressionType extends Exception
 {
 	public InvalidCompressionType(String msg)
 	{
-		super("Invalid PackDir compression type");
+		super(msg);
 	}
 }
