@@ -61,6 +61,15 @@ public class SparkFSEntry extends ArchiveEntry
 		}
 
 		name = new String(n, 0, nul);
+		if (name.length() == 0)
+		{
+			/* Some old Spark files have some extra empty
+			 * data on the end. */
+			is_eof = true;
+			comptype = SPARKFS_ENDDIR;
+			return;
+		}
+
 		if (!cur_dir.equals(""))
 		{
 			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
