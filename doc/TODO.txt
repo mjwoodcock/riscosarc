@@ -1,1 +1,2 @@
-1. Filename translation: Convert '/' to '.' and vice-versa.
+1. Check CRC
+
