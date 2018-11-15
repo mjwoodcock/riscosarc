@@ -3,6 +3,7 @@
 rm -f failed.txt
 
 while read -r src dest; do
+	echo "Testing $src"
 	passopt=""
 	if `echo $src | grep "_g," > /dev/null 2>&1`; then
 		passopt="-gpassword"
