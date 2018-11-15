@@ -91,4 +91,30 @@ public class BitInputStream extends FilterInputStream
 
 		return r;
 	}
+
+	public int readPackDirBitField() throws IOException
+	{
+		int read_bits = bit_size;
+		int r = 0;
+
+		while (bits_avail < bit_size)
+		{
+			r = is.read();
+			if (r == -1)
+			{
+				return -1;
+			}
+			buf |= (r << bits_avail);
+			bits_avail += EIGHT;
+			buf &= (((1 << (bits_avail)) - 1));
+		}
+
+		r = (int)(buf & bit_mask);
+		buf = buf >> read_bits;
+		bits_avail -= read_bits;
+		buf &= ((1 << bits_avail) - 1);
+
+		return r;
+	}
+
 }

@@ -153,7 +153,14 @@ public class LZWInputStream extends FilterInputStream
 
 		do
 		{
-			code = is.readBitField();
+			if (type == LZWConstants.ZOO || type == LZWConstants.PACKDIR)
+			{
+				code = is.readPackDirBitField();
+			}
+			else
+			{
+				code = is.readBitField();
+			}
 			if (code == -1)
 			{
 				break;
@@ -173,7 +180,14 @@ public class LZWInputStream extends FilterInputStream
 				if (type == LZWConstants.ZOO || type == LZWConstants.PACKDIR)
 				{
 					free_ent = LZWConstants.FIRST + 1;
-					inchar = old_code = code = is.readBitField();
+					if (type == LZWConstants.ZOO || type == LZWConstants.PACKDIR)
+					{
+						inchar = old_code = code = is.readPackDirBitField();
+					}
+					else
+					{
+						inchar = old_code = code = is.readBitField();
+					}
 					addByteToBuf((byte)inchar);
 					continue;
 				}
