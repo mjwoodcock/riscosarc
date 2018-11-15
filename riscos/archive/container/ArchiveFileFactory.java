@@ -54,7 +54,7 @@ public class ArchiveFileFactory
 
 	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
 	{
-		this(filename, "");
+		this(filename, null);
 	}
 
 	public ArchiveFile getArchiveFile()
