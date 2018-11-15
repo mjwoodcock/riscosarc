@@ -197,8 +197,6 @@ public class ArcFSFile extends ArchiveFile
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
 		GarbleInputStream gis = new GarbleInputStream(lis, passwd);
 
-		gis.consumePasswdChar();
-
 		switch (entry.getCompressType())
 		{
 		case ARCFS_STORE:
