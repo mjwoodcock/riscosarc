@@ -180,14 +180,7 @@ public class LZWInputStream extends FilterInputStream
 				if (type == LZWConstants.ZOO || type == LZWConstants.PACKDIR)
 				{
 					free_ent = LZWConstants.FIRST + 1;
-					if (type == LZWConstants.ZOO || type == LZWConstants.PACKDIR)
-					{
-						inchar = old_code = code = is.readPackDirBitField();
-					}
-					else
-					{
-						inchar = old_code = code = is.readBitField();
-					}
+					inchar = old_code = code = is.readPackDirBitField();
 					addByteToBuf((byte)inchar);
 					continue;
 				}
