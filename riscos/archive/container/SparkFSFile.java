@@ -182,6 +182,8 @@ public class SparkFSFile extends ArchiveFile
 			return new PackInputStream(gis);
 		case CT_CRUNCH:
 			return new PackInputStream(new LZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
+		case CT_SQUASH:
+			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.SQUASH);
 		default:
 			throw new InvalidSparkCompressionType();
 		}
