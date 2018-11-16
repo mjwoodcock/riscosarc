@@ -1,5 +1,6 @@
 RISC OS filetypes:
 ArcFS: 3fb
+CFS: d96
 SparcFS: ddc
 PackDir: 68e
 Squash: fca

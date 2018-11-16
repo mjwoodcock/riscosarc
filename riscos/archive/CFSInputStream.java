@@ -4,7 +4,7 @@ package riscos.archive;
 /* Code taken from David Pilling's FileShrinker code from
  * https://www.davidpilling.com/wiki/index.php/FileShrinker */
 
-/* FIXME: Implrement RAWBLOCK and ZEROBLOCK */
+/* FIXME: Implrement ZEROBLOCK */
 import java.util.zip.CRC32;
 import java.io.FilterInputStream;
 import java.io.InputStream;
@@ -100,6 +100,18 @@ public class CFSInputStream extends FilterInputStream
 			}
 			this.block_buffer[this.block_bufferi++] = (byte)buf[offset++];
 		}
+	}
+
+	private void copySrcToBlockBuffer(int len)
+	{
+		if (len > this.src_buffer_end - this.src_bufferi) {
+			len = this.src_buffer_end - this.src_bufferi;
+		}
+		System.arraycopy(this.src_buffer, this.src_bufferi, this.block_buffer, this.block_bufferi, len);
+		this.block_bufferi += len;
+		this.block_buffer_end += len;
+		this.src_bufferi += len;
+		this.src_bufferif += this.src_bufferif;
 	}
 
 	private int nextcode() throws IOException
@@ -239,12 +251,19 @@ public class CFSInputStream extends FilterInputStream
 				}
 			}
 		} else if (this.blocktype == RAWBLOCK) {
-			System.out.println("RAWBLOCK not handled");
+			if (this.src_buffer_end - this.src_bufferi < this.codelimit) {
+				fillSrcBuffer();
+			}
+			copySrcToBlockBuffer(this.codelimit);
 		} else if (this.blocktype == ZEROBLOCK) {
 			System.out.println("ZEROBLOCK not handled");
 		} else if (this.blocktype == ENDBLOCK) {
 			return -1;
+		} else {
+			return -1;
+//			throw new IOException();
 		}
+
 		return 0;
 	}
 
