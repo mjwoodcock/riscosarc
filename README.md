@@ -4,10 +4,11 @@ This is a Java implementation of the various compression algorithms used by
 RISC OS archivers.
 
 Supported archive formats are:
-- SparkFS
+- Spark
 - ArcFS
 - PackDir
 - Squash
+- CFS
 
 riscosarc can not create archives, it can only extract files from them.
 
