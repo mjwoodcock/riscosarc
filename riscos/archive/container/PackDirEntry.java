@@ -42,6 +42,9 @@ public class PackDirEntry extends ArchiveEntry
 		in_file.seek(offset);
 		entry_offset = in_file.getFilePointer();
 		name = packdir_file.readString();
+		if (name == null) {
+			throw new IOException();
+		}
 		if (name != "")
 		{
 			if (root)

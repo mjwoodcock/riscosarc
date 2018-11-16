@@ -69,8 +69,9 @@ public class PackDirFile extends ArchiveFile
 		do
 		{
 			r = in_file.read();
-			if (r != 0)
-			{
+			if (r == -1) {
+				return null;
+			} else if (r != 0) {
 				s.append((char)r);
 			}
 		} while (r != 0);
@@ -157,6 +158,7 @@ public class PackDirFile extends ArchiveFile
 			catch (IOException e)
 			{
 				System.err.println(e.toString());
+				break;
 			}
 		} while (dir_entries[0] > 0);
 	}
