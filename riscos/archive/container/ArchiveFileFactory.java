@@ -16,6 +16,7 @@ public class ArchiveFileFactory
 			SparkFSFile sfs = new SparkFSFile(filename, pass);
 			sfs.openForRead();
 			archive = sfs;
+			return;
 		}
 		catch (Exception e)
 		{
@@ -26,6 +27,7 @@ public class ArchiveFileFactory
 			ArcFSFile afs = new ArcFSFile(filename, pass);
 			afs.openForRead();
 			archive = afs;
+			return;
 		}
 		catch (Exception e)
 		{
@@ -36,6 +38,7 @@ public class ArchiveFileFactory
 			PackDirFile pd = new PackDirFile(filename);
 			pd.openForRead();
 			archive = pd;
+			return;
 		}
 		catch (Exception e)
 		{
@@ -46,10 +49,23 @@ public class ArchiveFileFactory
 			SquashFile sf = new SquashFile(filename);
 			sf.openForRead();
 			archive = sf;
+			return;
 		}
 		catch (Exception e)
 		{
 		}
+
+		try
+		{
+			CFSFile cfs = new CFSFile(filename);
+			cfs.openForRead();
+			archive = cfs;
+			return;
+		}
+		catch (Exception e)
+		{
+		}
+
 	}
 
 	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
