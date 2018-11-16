@@ -1,7 +1,10 @@
 package riscos.archive;
 
-/* FIXME: Check crc32 */
 
+/* Code taken from David Pilling's FileShrinker code from
+ * https://www.davidpilling.com/wiki/index.php/FileShrinker */
+
+/* FIXME: Implrement RAWBLOCK and ZEROBLOCK */
 import java.util.zip.CRC32;
 import java.io.FilterInputStream;
 import java.io.InputStream;
