@@ -2,7 +2,7 @@ package riscos.archive.container;
 
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidSparkCompressionType;
-import riscos.archive.InvalidSparkFSFile;
+import riscos.archive.InvalidSparkFile;
 import riscos.archive.InvalidCompressionType;
 import riscos.archive.InvalidArchiveFile;
 import riscos.archive.LZWInputStream;
@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.util.Vector;
 import java.util.Enumeration;
 
-public class SparkFSFile extends ArchiveFile
+public class SparkFile extends ArchiveFile
 {
 	public static final int CT_NOTCOMP = 0x01;
 	public static final int CT_NOTCOMP2 = 0x02;
@@ -36,7 +36,7 @@ public class SparkFSFile extends ArchiveFile
 	private Vector<ArchiveEntry> entry_list;
 	private byte passwd[];
 
-	public SparkFSFile(String filename, String pass)
+	public SparkFile(String filename, String pass)
 	{
 		archive_file = filename;
 		entry_list = new Vector<ArchiveEntry>();
@@ -88,12 +88,12 @@ public class SparkFSFile extends ArchiveFile
 			b = (byte)in_file.read();
 			if (b != SPARKFS_STARTBYTE)
 			{
-				throw new InvalidSparkFSFile();
+				throw new InvalidSparkFile();
 			}
 		}
 		catch (IOException e)
 		{
-			throw new InvalidSparkFSFile();
+			throw new InvalidSparkFile();
 		}
 	}
 
@@ -106,7 +106,7 @@ public class SparkFSFile extends ArchiveFile
 		long offset = in_file.getFilePointer();
 		do
 		{
-			SparkFSEntry fse = new SparkFSEntry(this, in_file, data_start);
+			SparkEntry fse = new SparkEntry(this, in_file, data_start);
 			try
 			{
 				fse.readEntry(current_dir, offset);
@@ -114,7 +114,7 @@ public class SparkFSFile extends ArchiveFile
 				{
 					break;
 				}
-				if (fse.getCompressType() == SparkFSEntry.SPARKFS_ENDDIR)
+				if (fse.getCompressType() == SparkEntry.SPARKFS_ENDDIR)
 				{
 					offset += 2;
 					int idx = current_dir.lastIndexOf('/');
@@ -166,7 +166,7 @@ public class SparkFSFile extends ArchiveFile
 		try {
 			in_file.seek(entry.getOffset());
 		} catch (IOException e) {
-			throw new InvalidSparkFSFile();
+			throw new InvalidSparkFile();
 		}
 
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());

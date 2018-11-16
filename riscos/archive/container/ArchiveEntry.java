@@ -1,7 +1,7 @@
 package riscos.archive.container;
 
 import riscos.archive.*;
-import riscos.archive.container.SparkFSFile;
+import riscos.archive.container.SparkFile;
 import java.io.FilterInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;

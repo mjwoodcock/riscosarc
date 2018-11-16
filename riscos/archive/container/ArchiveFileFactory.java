@@ -1,7 +1,6 @@
 package riscos.archive.container;
 
 import riscos.archive.container.ArchiveFile;
-import riscos.archive.container.SparkFSFile;
 import riscos.archive.InvalidArchiveFile;
 import java.io.IOException;
 
@@ -13,7 +12,7 @@ public class ArchiveFileFactory
 	{
 		try
 		{
-			SparkFSFile sfs = new SparkFSFile(filename, pass);
+			SparkFile sfs = new SparkFile(filename, pass);
 			sfs.openForRead();
 			archive = sfs;
 			return;

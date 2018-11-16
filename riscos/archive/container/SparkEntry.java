@@ -1,7 +1,7 @@
 package riscos.archive.container;
 
 import riscos.archive.*;
-import riscos.archive.container.SparkFSFile;
+import riscos.archive.container.SparkFile;
 import riscos.archive.container.ArchiveEntry;
 import java.io.FilterInputStream;
 import java.io.FileOutputStream;
@@ -9,17 +9,17 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
 
-public class SparkFSEntry extends ArchiveEntry
+public class SparkEntry extends ArchiveEntry
 {
 	public static final int SPARKFS_ENDDIR = 0x0;
 	public static final int ARCHPACK = 0x80;
 
-	private SparkFSFile spark_file;
+	private SparkFile spark_file;
 
 	private long entry_offset;
 	private long next_entry_offset;
 
-	public SparkFSEntry(SparkFSFile spark, RandomAccessInputStream in, int dat_start)
+	public SparkEntry(SparkFile spark, RandomAccessInputStream in, int dat_start)
 	{
 		super(in, dat_start);
 		spark_file = spark;
@@ -28,7 +28,7 @@ public class SparkFSEntry extends ArchiveEntry
 		append_filetype = true;
 	}
 
-	private void readSparkEntry(String cur_dir) throws IOException, InvalidSparkFSFile
+	private void readSparkEntry(String cur_dir) throws IOException, InvalidSparkFile
 	{
 		int date;
 		int time;
@@ -82,12 +82,12 @@ public class SparkFSEntry extends ArchiveEntry
 		complen = spark_file.read32();
 		if (complen < 0)
 		{
-			throw new InvalidSparkFSFile();
+			throw new InvalidSparkFile();
 		}
 		date = spark_file.read16();
 		time = spark_file.read16();
 		crc = spark_file.read16();
-		if ((comptype & ~ARCHPACK) > SparkFSFile.CT_NOTCOMP)
+		if ((comptype & ~ARCHPACK) > SparkFile.CT_NOTCOMP)
 		{
 			origlen = spark_file.read32();
 		}
@@ -119,7 +119,7 @@ public class SparkFSEntry extends ArchiveEntry
 		appendFiletype();
 	}
 
-	public void readEntry(String cur_dir, long offset) throws IOException, InvalidSparkFSFile
+	public void readEntry(String cur_dir, long offset) throws IOException, InvalidSparkFile
 	{
 		in_file.seek(offset);
 		entry_offset = in_file.getFilePointer();
