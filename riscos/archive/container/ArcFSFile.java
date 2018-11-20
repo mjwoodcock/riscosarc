@@ -1,6 +1,8 @@
 package riscos.archive.container;
 
 import riscos.archive.RandomAccessInputStream;
+import riscos.archive.CRC;
+import riscos.archive.NullCRC;
 import riscos.archive.InvalidArcFSCompressionType;
 import riscos.archive.InvalidArcFSFile;
 import riscos.archive.InvalidCompressionType;
@@ -219,5 +221,11 @@ public class ArcFSFile extends ArchiveFile
 		System.out.println("Version = " + version / 100 + "." + version % 100);
 		System.out.println("RW Version = " + rw_version / 100 + "." + rw_version % 100);
 		System.out.println("Arc format = " + arc_format);
+	}
+
+	public CRC getCRCInstance()
+	{
+		/* I'm not sure what CRC algorithm ArcFS uses */
+		return new NullCRC();
 	}
 }

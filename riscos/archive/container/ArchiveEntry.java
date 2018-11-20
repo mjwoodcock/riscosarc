@@ -19,7 +19,7 @@ public class ArchiveEntry
 	protected int complen;
 	protected int date;
 	protected int time;
-	protected int crc;
+	protected long crc;
 	protected int origlen;
 	protected int load;
 	protected int exec;
@@ -171,5 +171,10 @@ public class ArchiveEntry
 	public String getName()
 	{
 		return name;
+	}
+
+	public long getCrcValue()
+	{
+		return crc;
 	}
 }

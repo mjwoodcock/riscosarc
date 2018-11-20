@@ -195,4 +195,9 @@ public class PackDirFile extends ArchiveFile
 		System.out.println("Number of files: " + num_files);
 		System.out.println("Number of dirs: " + num_dirs);
 	}
+
+	public CRC getCRCInstance()
+	{
+		return new NullCRC();
+	}
 }

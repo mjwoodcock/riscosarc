@@ -1,5 +1,6 @@
 package riscos.archive.container;
 
+import riscos.archive.CRC;
 import riscos.archive.InvalidCompressionType;
 import riscos.archive.InvalidArchiveFile;
 import java.io.IOException;
@@ -14,4 +15,5 @@ public abstract class ArchiveFile
 	public abstract void openForRead() throws IOException, InvalidArchiveFile;
 	public abstract Enumeration<ArchiveEntry> entries();
 	public abstract InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType;
+	public abstract CRC getCRCInstance();
 }

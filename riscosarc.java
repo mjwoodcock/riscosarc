@@ -1,9 +1,10 @@
 import riscos.archive.*;
+import riscos.archive.CRC;
 import riscos.archive.container.ArchiveFile;
 import riscos.archive.container.ArchiveFileFactory;
 import riscos.archive.container.ArchiveEntry;
 import java.io.File;
-import java.io.FilterInputStream;
+import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -79,6 +80,7 @@ public class riscosarc
 
 		if (ent == null) {
 			System.err.println("Invalid archive file");
+			System.exit(1);
 		}
 
 		try
@@ -97,12 +99,14 @@ public class riscosarc
 
 				if (do_extract)
 				{
+					CRC crc = af.getCRCInstance();
+					crc.setDataLength(entry.getUncompressedLength());
 					entry.cleanOldFile();
 					entry.mkDir(output_directory);
 					try {
-						FilterInputStream fis = null;
+						InputStream fis = null;
 						if (af != null) {
-							fis = (FilterInputStream)af.getInputStream(entry);
+							fis = af.getInputStream(entry);
 						}
 						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename());
 						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());
@@ -113,12 +117,16 @@ public class riscosarc
 							r = fis.read(buf, 0, buf.length);
 							if (r != -1)
 							{
+								crc.update(buf, 0, r);
 								los.write(buf, 0, r);
 							}
 						} while (r != -1);
 						los.close();
 						fos.close();
 						entry.setFileTime();
+						if (!crc.compare(entry.getCrcValue())) {
+							System.out.println("CRC check failed");
+						}
 					} catch (Exception e) {
 						System.out.println(e.toString());
 						e.printStackTrace(System.out);
@@ -130,6 +138,7 @@ public class riscosarc
 		catch (Exception e)
 		{
 			System.err.println(e.toString());
+			e.printStackTrace(System.out);
 			error = true;
 		}
 

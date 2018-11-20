@@ -1,5 +1,7 @@
 package riscos.archive.container;
 
+import riscos.archive.CRC;
+import riscos.archive.NullCRC;
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidSquashFile;
 import riscos.archive.InvalidArchiveFile;
@@ -117,5 +119,10 @@ public class SquashFile extends ArchiveFile
 	public byte[] getPasswd()
 	{
 		return null;
+	}
+
+	public CRC getCRCInstance()
+	{
+		return new NullCRC();
 	}
 }

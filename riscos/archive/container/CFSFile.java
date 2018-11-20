@@ -1,5 +1,7 @@
 package riscos.archive.container;
 
+import riscos.archive.CRC;
+import riscos.archive.NullCRC;
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidCFSFile;
 import riscos.archive.InvalidArchiveFile;
@@ -92,5 +94,10 @@ public class CFSFile extends ArchiveFile
 	public byte[] getPasswd()
 	{
 		return null;
+	}
+
+	public CRC getCRCInstance()
+	{
+		return new NullCRC();
 	}
 }

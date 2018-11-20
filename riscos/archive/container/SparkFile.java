@@ -1,5 +1,7 @@
 package riscos.archive.container;
 
+import riscos.archive.CRC;
+import riscos.archive.SparkCRC;
 import riscos.archive.RandomAccessInputStream;
 import riscos.archive.InvalidSparkCompressionType;
 import riscos.archive.InvalidSparkFile;
@@ -194,5 +196,10 @@ public class SparkFile extends ArchiveFile
 	{
 		System.out.println("Header length = " + header_length);
 		System.out.println("Data start = " + data_start);
+	}
+
+	public CRC getCRCInstance()
+	{
+		return new SparkCRC();
 	}
 }
