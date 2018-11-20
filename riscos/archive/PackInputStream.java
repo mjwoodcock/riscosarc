@@ -1,9 +1,5 @@
 package riscos.archive;
 
-/* FIXME: Check crc32 */
-
-import java.util.zip.InflaterInputStream;
-import java.util.zip.CRC32;
 import java.io.FilterInputStream;
 import java.io.PushbackInputStream;
 import java.io.InputStream;
@@ -74,7 +70,6 @@ public class PackInputStream extends FilterInputStream
 		return ncr_buflen;
 	}
 
-	protected CRC32 crc;
 	protected boolean eos;
 
 	public PackInputStream(InputStream in)

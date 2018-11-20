@@ -1,8 +1,5 @@
 package riscos.archive;
 
-/* FIXME: Check crc32 */
-
-import java.util.zip.CRC32;
 import java.io.FilterInputStream;
 import java.io.PushbackInputStream;
 import java.io.FileOutputStream;
@@ -40,7 +37,6 @@ public class LZWInputStream extends FilterInputStream
 
 	private boolean got_header;
 
-	protected CRC32 crc;
 	protected boolean eos;
 
 	private void readHeader() throws IOException

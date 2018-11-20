@@ -1,8 +1,5 @@
 package riscos.archive;
 
-/* FIXME: Check crc32 */
-
-import java.util.zip.CRC32;
 import java.io.FilterOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;

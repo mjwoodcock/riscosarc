@@ -5,7 +5,6 @@ package riscos.archive;
  * https://www.davidpilling.com/wiki/index.php/FileShrinker */
 
 /* FIXME: Implrement ZEROBLOCK */
-import java.util.zip.CRC32;
 import java.io.FilterInputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -48,7 +47,6 @@ public class CFSInputStream extends FilterInputStream
 
 	private boolean got_header;
 
-	protected CRC32 crc;
 	protected boolean eos;
 
 	private int get_char() throws IOException

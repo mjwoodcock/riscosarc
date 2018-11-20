@@ -1,6 +1,5 @@
 package riscos.archive;
 
-import java.util.zip.CRC32;
 import java.io.PushbackInputStream;
 import java.io.FilterInputStream;
 import java.io.InputStream;
