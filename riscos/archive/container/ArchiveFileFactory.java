@@ -65,6 +65,17 @@ public class ArchiveFileFactory
 		{
 		}
 
+		try
+		{
+			ZipFileWrapper z = new ZipFileWrapper(filename, null);
+			z.openForRead();
+			archive = z;
+			return;
+		}
+		catch (Exception e)
+		{
+		}
+
 	}
 
 	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
