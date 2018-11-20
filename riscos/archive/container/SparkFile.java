@@ -85,10 +85,12 @@ public class SparkFile extends ArchiveFile
 	{
 		try
 		{
-			byte b;
+			byte b1 = (byte)in_file.read();
+			byte b2 = (byte)in_file.read();
 
-			b = (byte)in_file.read();
-			if (b != SPARKFS_STARTBYTE)
+			/* If b2 high bit is not set, then this is a DOS
+			 * format .arc file */
+			if (b1 != SPARKFS_STARTBYTE || ((b2 & 0x80) == 0x0) )
 			{
 				throw new InvalidSparkFile();
 			}
@@ -105,7 +107,7 @@ public class SparkFile extends ArchiveFile
 
 		readHeader();
 
-		long offset = in_file.getFilePointer();
+		long offset = 1;
 		do
 		{
 			SparkEntry fse = new SparkEntry(this, in_file, data_start);
