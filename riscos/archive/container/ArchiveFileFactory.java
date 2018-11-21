@@ -76,6 +76,17 @@ public class ArchiveFileFactory
 		{
 		}
 
+		try
+		{
+			ArcFile a = new ArcFile(filename, null);
+			a.openForRead();
+			archive = a;
+			return;
+		}
+		catch (Exception e)
+		{
+		}
+
 	}
 
 	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
