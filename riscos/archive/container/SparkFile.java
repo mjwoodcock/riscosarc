@@ -10,6 +10,7 @@ import riscos.archive.InvalidArchiveFile;
 import riscos.archive.NcompressLZWInputStream;
 import riscos.archive.UnsupportedLZWType;
 import riscos.archive.GarbleInputStream;
+import riscos.archive.HuffInputStream;
 import riscos.archive.LimitInputStream;
 import riscos.archive.PackInputStream;
 import java.io.IOException;
@@ -187,6 +188,8 @@ public class SparkFile extends ArchiveFile
 				return new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS);
 			case CT_PACK:
 				return new PackInputStream(gis);
+			case CT_PACKSQUEEZE:
+				return new PackInputStream(new HuffInputStream(gis));
 			case CT_CRUNCH:
 				return new PackInputStream(new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
 			case CT_SQUASH:
