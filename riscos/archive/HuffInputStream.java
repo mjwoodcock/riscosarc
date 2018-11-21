@@ -158,29 +158,22 @@ public class HuffInputStream extends FilterInputStream
 
 		read_huff_tree();
 
-		while (i < off)
-		{
-			int b = gethuff();
-			if (b == -1)
-				break;
-		}
-
-		i = 0;
-		while (i < len)
+		i = off;
+		while (i - off < len)
 		{
 			int b = gethuff();
 			if (b == -1)
 			{
-				if (i == 0)
-				{
-					i = -1;
-				}
 				break;
 			}
 			buf[i++] = (byte)b;
 		}
 
-		return i;
+		if (i == 0 && atEof) {
+			return -1;
+		}
+
+		return i - off;
 	}
 /*
 public static void
