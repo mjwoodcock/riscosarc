@@ -126,6 +126,7 @@ public class riscosarc
 						entry.setFileTime();
 						if (!crc.compare(entry.getCrcValue())) {
 							System.out.println("CRC check failed");
+							error = true;
 						}
 					} catch (Exception e) {
 						System.out.println(e.toString());
