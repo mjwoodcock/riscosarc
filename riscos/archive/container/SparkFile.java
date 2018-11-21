@@ -192,7 +192,6 @@ public class SparkFile extends ArchiveFile
 			case CT_SQUASH:
 				return new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.SQUASH);
 			default:
-				System.out.println("mjw... comp type " + entry.getCompressType());
 				throw new InvalidSparkCompressionType();
 			}
 		} catch (UnsupportedLZWType e) {

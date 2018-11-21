@@ -55,7 +55,6 @@ public class ZipFileWrapper extends ArchiveFile
 					this.entry_list.add(new ZipEntryWrapper(ze.getName(), this, ze));
 				}
 			} catch (Exception e) {
-				System.out.println("mjw... here " + e.toString());
 				throw new InvalidZipFile();
 			}
 		}
