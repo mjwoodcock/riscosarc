@@ -20,7 +20,8 @@ public class riscosarc
 		System.err.println("  -l: list contents of file");
 		System.err.println("  -x: extract file");
 		System.err.println("  argument can be:");
-		System.err.println("  -g<password>: Set password to <password>");
+		System.err.println("  -c: extract to console");
+		System.err.println("  -g<password>: set password to <password>");
 		System.err.println("  -r: extract raw compressed data");
 		System.err.println("  -v: verbose list contents of file");
 		System.exit(1);
@@ -32,6 +33,7 @@ public class riscosarc
 		boolean do_verbose = false;
 		boolean do_extract = false;
 		boolean extract_raw = false;
+		boolean console_output = false;
 		String output_directory = ".";
 		String password = null;
 		String suffix = "";
@@ -44,7 +46,11 @@ public class riscosarc
 
 		for (int i = 0; i < args.length; i++)
 		{
-			if (args[i].startsWith("-d"))
+			if (args[i].startsWith("-c"))
+			{
+				console_output = true;
+			}
+			else if (args[i].startsWith("-d"))
 			{
 				output_directory = args[i].substring(2);
 			}
@@ -125,8 +131,16 @@ public class riscosarc
 							System.exit(1);
 						}
 
-						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename() + suffix);
-						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());
+						FileOutputStream fos = null;
+						LimitOutputStream los;
+
+						if (console_output) {
+							los = new LimitOutputStream(System.out, entry.getUncompressedLength());
+						} else {
+							fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename() + suffix);
+							los = new LimitOutputStream(fos, entry.getUncompressedLength());
+						}
+
 						int r = 0;
 						byte buf[] = new byte[1024];
 						do
@@ -138,9 +152,18 @@ public class riscosarc
 								los.write(buf, 0, r);
 							}
 						} while (r != -1);
-						los.close();
-						fos.close();
-						entry.setFileTime();
+
+						if (!console_output) {
+							if (los != null) {
+								los.close();
+							}
+							if (fos != null) {
+								fos.close();
+							}
+
+							entry.setFileTime();
+						}
+
 						if (!extract_raw && !crc.compare(entry.getCrcValue())) {
 							System.out.println("CRC check failed");
 							error = true;
