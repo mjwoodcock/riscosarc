@@ -7,7 +7,8 @@ import riscos.archive.InvalidSparkCompressionType;
 import riscos.archive.InvalidSparkFile;
 import riscos.archive.InvalidCompressionType;
 import riscos.archive.InvalidArchiveFile;
-import riscos.archive.LZWInputStream;
+import riscos.archive.NcompressLZWInputStream;
+import riscos.archive.UnsupportedLZWType;
 import riscos.archive.GarbleInputStream;
 import riscos.archive.LimitInputStream;
 import riscos.archive.PackInputStream;
@@ -176,21 +177,26 @@ public class SparkFile extends ArchiveFile
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
 		GarbleInputStream gis = new GarbleInputStream(lis, passwd);
 
-		switch (entry.getCompressType())
-		{
-		case CT_NOTCOMP:
-		case CT_NOTCOMP2:
-			return gis;
-		case CT_COMP:
-			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS);
-		case CT_PACK:
-			return new PackInputStream(gis);
-		case CT_CRUNCH:
-			return new PackInputStream(new LZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
-		case CT_SQUASH:
-			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.SQUASH);
-		default:
-			throw new InvalidSparkCompressionType();
+		try {
+			switch (entry.getCompressType())
+			{
+			case CT_NOTCOMP:
+			case CT_NOTCOMP2:
+				return gis;
+			case CT_COMP:
+				return new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS);
+			case CT_PACK:
+				return new PackInputStream(gis);
+			case CT_CRUNCH:
+				return new PackInputStream(new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
+			case CT_SQUASH:
+				return new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.SQUASH);
+			default:
+				System.out.println("mjw... comp type " + entry.getCompressType());
+				throw new InvalidSparkCompressionType();
+			}
+		} catch (UnsupportedLZWType e) {
+			throw new InvalidSparkCompressionType(e.toString());
 		}
 	}
 

@@ -7,7 +7,8 @@ import riscos.archive.InvalidArcFSCompressionType;
 import riscos.archive.InvalidArcFSFile;
 import riscos.archive.InvalidCompressionType;
 import riscos.archive.InvalidArchiveFile;
-import riscos.archive.LZWInputStream;
+import riscos.archive.UnsupportedLZWType;
+import riscos.archive.NcompressLZWInputStream;
 import riscos.archive.GarbleInputStream;
 import riscos.archive.LimitInputStream;
 import riscos.archive.PackInputStream;
@@ -199,18 +200,22 @@ public class ArcFSFile extends ArchiveFile
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
 		GarbleInputStream gis = new GarbleInputStream(lis, passwd);
 
-		switch (entry.getCompressType())
-		{
-		case ARCFS_STORE:
-			return gis;
-		case ARCFS_COMPRESS:
-			return new LZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS, entry.getMaxBits());
-		case ARCFS_PACK:
-			return new PackInputStream(gis);
-		case ARCFS_CRUNCH:
-			return new PackInputStream(new LZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
-		default:
-			throw new InvalidArcFSCompressionType();
+		try {
+			switch (entry.getCompressType())
+			{
+			case ARCFS_STORE:
+				return gis;
+			case ARCFS_COMPRESS:
+				return new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.COMPRESS, entry.getMaxBits());
+			case ARCFS_PACK:
+				return new PackInputStream(gis);
+			case ARCFS_CRUNCH:
+				return new PackInputStream(new NcompressLZWInputStream(gis, 0, riscos.archive.LZWConstants.CRUNCH, entry.getMaxBits()));
+			default:
+				throw new InvalidArcFSCompressionType();
+			}
+		} catch (UnsupportedLZWType e) {
+			throw new InvalidArcFSCompressionType(e.toString());
 		}
 	}
 

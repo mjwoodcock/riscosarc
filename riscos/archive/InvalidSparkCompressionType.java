@@ -8,4 +8,9 @@ public class InvalidSparkCompressionType extends InvalidCompressionType
 	{
 		super("Invalid Spark compression type");
 	}
+
+	public InvalidSparkCompressionType(String msg)
+	{
+		super("Invalid Spark compression type " + msg);
+	}
 }

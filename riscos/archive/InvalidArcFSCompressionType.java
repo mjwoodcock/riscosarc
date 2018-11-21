@@ -6,4 +6,9 @@ public class InvalidArcFSCompressionType extends InvalidCompressionType
 	{
 		super("Invalid ArcFS compression type");
 	}
+
+	public InvalidArcFSCompressionType(String msg)
+	{
+		super("Invalid ArcFS compression type: " + msg);
+	}
 }

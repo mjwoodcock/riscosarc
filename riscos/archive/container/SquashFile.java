@@ -3,9 +3,10 @@ package riscos.archive.container;
 import riscos.archive.CRC;
 import riscos.archive.NullCRC;
 import riscos.archive.RandomAccessInputStream;
-import riscos.archive.InvalidSquashFile;
 import riscos.archive.InvalidArchiveFile;
-import riscos.archive.LZWInputStream;
+import riscos.archive.InvalidSquashFile;
+import riscos.archive.UnsupportedLZWType;
+import riscos.archive.NcompressLZWInputStream;
 import riscos.archive.LimitInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +66,7 @@ public class SquashFile extends ArchiveFile
 			String hdr = readString(4);
 			if (!hdr.equals("SQSH"))
 			{
-				throw new InvalidSquashFile();
+				throw new InvalidSquashFile("Bad magic");
 			}
 		}
 		catch (IOException e)
@@ -99,17 +100,21 @@ public class SquashFile extends ArchiveFile
 		return entry_list.elements();
 	}
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile
+	public InputStream getInputStream(ArchiveEntry entry) throws InvalidSquashFile
 	{
 		try {
 			in_file.seek(entry.getOffset());
 		} catch (IOException e) {
-			throw new InvalidSquashFile();
+			throw new InvalidSquashFile("Bad seek");
 		}
 
 		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
 
-		return new LZWInputStream(lis, 0, riscos.archive.LZWConstants.UNIX_COMPRESS);
+		try {
+			return new NcompressLZWInputStream(lis, 0, riscos.archive.LZWConstants.UNIX_COMPRESS);
+		} catch (UnsupportedLZWType e) {
+			throw new InvalidSquashFile(e.toString());
+		}
 	}
 
 	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidSquashFile
@@ -117,7 +122,7 @@ public class SquashFile extends ArchiveFile
 		try {
 			in_file.seek(entry.getOffset());
 		} catch (IOException e) {
-			throw new InvalidSquashFile();
+			throw new InvalidSquashFile("Bad seek");
 		}
 
 		return new LimitInputStream(in_file, entry.getCompressedLength());
