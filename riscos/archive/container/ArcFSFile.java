@@ -214,6 +214,17 @@ public class ArcFSFile extends ArchiveFile
 		}
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile
+	{
+		try {
+			in_file.seek(entry.getOffset());
+		} catch (IOException e) {
+			throw new InvalidArcFSFile();
+		}
+
+		return new LimitInputStream(in_file, entry.getCompressedLength());
+	}
+
 	public void printArcFSInfo()
 	{
 		System.out.println("Header length = " + header_length);

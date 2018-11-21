@@ -112,6 +112,17 @@ public class SquashFile extends ArchiveFile
 		return new LZWInputStream(lis, 0, riscos.archive.LZWConstants.UNIX_COMPRESS);
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidSquashFile
+	{
+		try {
+			in_file.seek(entry.getOffset());
+		} catch (IOException e) {
+			throw new InvalidSquashFile();
+		}
+
+		return new LimitInputStream(in_file, entry.getCompressedLength());
+	}
+
 	public void printInfo()
 	{
 	}

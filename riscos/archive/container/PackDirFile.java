@@ -189,6 +189,17 @@ public class PackDirFile extends ArchiveFile
 		}
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
+	{
+		try {
+			in_file.seek(entry.getOffset());
+		} catch (IOException e) {
+			throw new InvalidPackDirFile();
+		}
+
+		return new LimitInputStream(in_file, entry.getCompressedLength());
+	}
+
 	public void printInfo()
 	{
 		System.out.println("Number of bits: " + lzw_bits);

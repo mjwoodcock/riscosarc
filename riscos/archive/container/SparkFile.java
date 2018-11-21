@@ -194,6 +194,17 @@ public class SparkFile extends ArchiveFile
 		}
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile
+	{
+		try {
+			in_file.seek(entry.getOffset());
+		} catch (IOException e) {
+			throw new InvalidSparkFile();
+		}
+
+		return new LimitInputStream(in_file, entry.getCompressedLength());
+	}
+
 	public void printSparkInfo()
 	{
 		System.out.println("Header length = " + header_length);

@@ -87,6 +87,17 @@ public class CFSFile extends ArchiveFile
 		return new CFSInputStream(lis);
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile
+	{
+		try {
+			this.in_file.seek(entry.getOffset());
+		} catch (IOException e) {
+			throw new InvalidCFSFile();
+		}
+
+		return new LimitInputStream(this.in_file, entry.getCompressedLength());
+	}
+
 	public void printInfo()
 	{
 	}

@@ -15,5 +15,6 @@ public abstract class ArchiveFile
 	public abstract void openForRead() throws IOException, InvalidArchiveFile;
 	public abstract Enumeration<ArchiveEntry> entries();
 	public abstract InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType;
+	public abstract InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType;
 	public abstract CRC getCRCInstance();
 }

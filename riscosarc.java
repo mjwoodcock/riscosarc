@@ -15,12 +15,14 @@ public class riscosarc
 {
 	public static void usage()
 	{
-		System.err.println("Usage: java riscosarc <argument> <file>");
+		System.err.println("Usage: java riscosarc <command> <argument> <file>");
+		System.err.println("  command can be:");
+		System.err.println("  -l: list contents of file");
+		System.err.println("  -x: extract file");
 		System.err.println("  argument can be:");
 		System.err.println("  -g<password>: Set password to <password>");
-		System.err.println("  -l: list contents of file");
+		System.err.println("  -r: extract raw compressed data");
 		System.err.println("  -v: verbose list contents of file");
-		System.err.println("  -x: extract file");
 		System.exit(1);
 	}
 
@@ -29,8 +31,10 @@ public class riscosarc
 		boolean do_list = false;
 		boolean do_verbose = false;
 		boolean do_extract = false;
+		boolean extract_raw = false;
 		String output_directory = ".";
 		String password = null;
+		String suffix = "";
 		boolean error = false;
 
 		if (args.length < 2)
@@ -51,6 +55,11 @@ public class riscosarc
 			else if (args[i].equals("-l"))
 			{
 				do_list = true;
+			}
+			else if (args[i].equals("-r"))
+			{
+				extract_raw = true;
+				suffix = ".raw";
 			}
 			else if (args[i].equals("-v"))
 			{
@@ -105,10 +114,18 @@ public class riscosarc
 					entry.mkDir(output_directory);
 					try {
 						InputStream fis = null;
-						if (af != null) {
+						if (extract_raw) {
+							fis = af.getRawInputStream(entry);
+						} else {
 							fis = af.getInputStream(entry);
 						}
-						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename());
+
+						if (fis == null) {
+							System.err.println("Can not get input stream");
+							System.exit(1);
+						}
+
+						FileOutputStream fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename() + suffix);
 						LimitOutputStream los = new LimitOutputStream(fos, entry.getUncompressedLength());
 						int r = 0;
 						byte buf[] = new byte[1024];
@@ -124,7 +141,7 @@ public class riscosarc
 						los.close();
 						fos.close();
 						entry.setFileTime();
-						if (!crc.compare(entry.getCrcValue())) {
+						if (!extract_raw && !crc.compare(entry.getCrcValue())) {
 							System.out.println("CRC check failed");
 							error = true;
 						}

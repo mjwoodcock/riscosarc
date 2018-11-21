@@ -76,6 +76,11 @@ public class ZipFileWrapper extends ArchiveFile
 		}
 	}
 
+	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile
+	{
+		return null;
+	}
+
 	public CRC getCRCInstance()
 	{
 		return new ZipCRC();
