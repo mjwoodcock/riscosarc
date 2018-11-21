@@ -15,12 +15,13 @@ public class riscosarc
 {
 	public static void usage()
 	{
-		System.err.println("Usage: java riscosarc <command> <argument> <file>");
+		System.err.println("Usage: java riscosarc <command> <argument> <archive_file> [filename]");
 		System.err.println("  command can be:");
 		System.err.println("  -l: list contents of file");
 		System.err.println("  -x: extract file");
 		System.err.println("  argument can be:");
-		System.err.println("  -c: extract to console");
+		System.err.println("  -c: extract console");
+		System.err.println("  -d<path>: extract files to <path>");
 		System.err.println("  -g<password>: set password to <password>");
 		System.err.println("  -r: extract raw compressed data");
 		System.err.println("  -v: verbose list contents of file");
@@ -38,6 +39,8 @@ public class riscosarc
 		String password = null;
 		String suffix = "";
 		boolean error = false;
+		int archive_file_arg = -1;
+		String file_to_extract = null;
 
 		if (args.length < 2)
 		{
@@ -79,13 +82,26 @@ public class riscosarc
 			{
 				riscosarc.usage();
 			}
+			else
+			{
+				archive_file_arg = i;
+				break;
+			}
+		}
+
+		if (!(do_extract || do_list) || archive_file_arg == -1) {
+				riscosarc.usage();
+		}
+
+		if (archive_file_arg < args.length - 1) {
+			file_to_extract = args[archive_file_arg + 1];
 		}
 
 		Enumeration<ArchiveEntry> ent = null;
 		ArchiveFileFactory aff;
 		ArchiveFile af;
 		try {
-			aff = new ArchiveFileFactory(args[args.length - 1], password);
+			aff = new ArchiveFileFactory(args[archive_file_arg], password);
 			af = aff.getArchiveFile();
 			ent = af.entries();
 		} catch (Exception e) {
@@ -112,6 +128,10 @@ public class riscosarc
 					entry.printEntryData();
 				}
 
+				if (file_to_extract != null && !file_to_extract.equals(entry.getLocalFilename())) {
+					continue;
+				}
+
 				if (do_extract)
 				{
 					CRC crc = af.getCRCInstance();
@@ -125,14 +145,13 @@ public class riscosarc
 						} else {
 							fis = af.getInputStream(entry);
 						}
-
 						if (fis == null) {
 							System.err.println("Can not get input stream");
 							System.exit(1);
 						}
 
 						FileOutputStream fos = null;
-						LimitOutputStream los;
+						LimitOutputStream los = null;
 
 						if (console_output) {
 							los = new LimitOutputStream(System.out, entry.getUncompressedLength());
