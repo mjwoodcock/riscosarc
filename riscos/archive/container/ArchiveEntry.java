@@ -32,10 +32,11 @@ public class ArchiveEntry
 	protected boolean append_filetype;
 
 
-	ArchiveEntry(RandomAccessInputStream in, int dat_start)
+	ArchiveEntry(RandomAccessInputStream in, int dat_start, boolean appendFiletype)
 	{
-		in_file = in;
-		data_start = dat_start;
+		this.in_file = in;
+		this.data_start = dat_start;
+		this.append_filetype = appendFiletype;
 	}
 
 	protected void calculateFileTime()
@@ -168,11 +169,18 @@ public class ArchiveEntry
 		return comptype;
 	}
 
+	/* Gets the name as it would appear on RISC OS
+	 * @return the filename
+	 */
 	public String getName()
 	{
 		return name;
 	}
 
+	/* Gets the CRC value
+	 * @return the crc value
+	 * @see CRC
+	 */
 	public long getCrcValue()
 	{
 		return crc;

@@ -13,13 +13,12 @@ public class SquashEntry extends ArchiveEntry
 	private SquashFile squash_file;
 	private long file_length;
 
-	public SquashEntry(SquashFile squash, RandomAccessInputStream in, String fname)
+	public SquashEntry(SquashFile squash, RandomAccessInputStream in, String fname, boolean appendFiletype)
 	{
-		super(in, 0);
-		squash_file = squash;
-		append_filetype = true;
+		super(in, 0, appendFiletype);
+		this.squash_file = squash;
 		File f = new File(fname);
-		file_length = f.length();
+		this.file_length = f.length();
 		String basename = f.toPath().getFileName().toString();
 		int idx = basename.indexOf(",fca");
 		if (idx == -1) {

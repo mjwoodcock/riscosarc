@@ -17,11 +17,18 @@ public class CFSFile extends ArchiveFile
 	private RandomAccessInputStream in_file;
 	private String archive_file;
 	private Vector<ArchiveEntry> entry_list;
+	private boolean appendFiletype;
 
 	public CFSFile(String filename)
 	{
+		this(filename, true);
+	}
+
+	public CFSFile(String filename, boolean appendFiletype)
+	{
 		this.archive_file = filename;
 		this.entry_list = new Vector<ArchiveEntry>();
+		this.appendFiletype = appendFiletype;
 	}
 
 	public int read32() throws IOException
@@ -60,7 +67,7 @@ public class CFSFile extends ArchiveFile
 
 		readHeader();
 
-		CFSEntry se = new CFSEntry(this, this.in_file, this.archive_file);
+		CFSEntry se = new CFSEntry(this, this.in_file, this.archive_file, this.appendFiletype);
 		try {
 			se.readEntry(0);
 			this.entry_list.add(se);

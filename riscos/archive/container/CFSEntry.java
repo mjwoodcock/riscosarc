@@ -12,11 +12,10 @@ public class CFSEntry extends ArchiveEntry
 	private CFSFile cfs_file;
 	private long file_length;
 
-	public CFSEntry(CFSFile cfs, RandomAccessInputStream in, String fname)
+	public CFSEntry(CFSFile cfs, RandomAccessInputStream in, String fname, boolean appendFiletype)
 	{
-		super(in, 0);
+		super(in, 0, appendFiletype);
 		this.cfs_file = cfs;
-		append_filetype = true;
 		File f = new File(fname);
 		this.file_length = f.length();
 		String basename = f.toPath().getFileName().toString();

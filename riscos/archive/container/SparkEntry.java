@@ -19,13 +19,12 @@ public class SparkEntry extends ArchiveEntry
 	private long entry_offset;
 	private long next_entry_offset;
 
-	public SparkEntry(SparkFile spark, RandomAccessInputStream in, int dat_start)
+	public SparkEntry(SparkFile spark, RandomAccessInputStream in, int dat_start, boolean appendFiletype)
 	{
-		super(in, dat_start);
+		super(in, dat_start, appendFiletype);
 		spark_file = spark;
 		is_del = false;
 		is_eof = false;
-		append_filetype = true;
 	}
 
 	private void readSparkEntry(String cur_dir) throws IOException, InvalidSparkFile

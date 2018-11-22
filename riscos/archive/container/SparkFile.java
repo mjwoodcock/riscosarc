@@ -39,15 +39,22 @@ public class SparkFile extends ArchiveFile
 	private String current_dir;
 	private Vector<ArchiveEntry> entry_list;
 	private byte passwd[];
+	private boolean appendFiletype;
 
 	public SparkFile(String filename, String pass)
 	{
-		archive_file = filename;
-		entry_list = new Vector<ArchiveEntry>();
-		current_dir = "";
+		this(filename, pass, true);
+	}
+
+	public SparkFile(String filename, String pass, boolean appendFiletype)
+	{
+		this.archive_file = filename;
+		this.appendFiletype = appendFiletype;
+		this.entry_list = new Vector<ArchiveEntry>();
+		this.current_dir = "";
 		if (pass != null)
 		{
-			passwd = pass.getBytes();
+			this.passwd = pass.getBytes();
 		}
 	}
 
@@ -112,7 +119,7 @@ public class SparkFile extends ArchiveFile
 		long offset = 1;
 		do
 		{
-			SparkEntry fse = new SparkEntry(this, in_file, data_start);
+			SparkEntry fse = new SparkEntry(this, in_file, data_start, appendFiletype);
 			try
 			{
 				fse.readEntry(current_dir, offset);

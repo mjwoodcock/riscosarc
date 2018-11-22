@@ -8,11 +8,21 @@ public class ArchiveFileFactory
 {
 	private ArchiveFile archive;
 
+	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
+	{
+		this(filename, null);
+	}
+
 	public ArchiveFileFactory(String filename, String pass) throws IOException, InvalidArchiveFile
+	{
+		this(filename, pass, true);
+	}
+
+	public ArchiveFileFactory(String filename, String pass, boolean appendFiletype) throws IOException, InvalidArchiveFile
 	{
 		try
 		{
-			SparkFile sfs = new SparkFile(filename, pass);
+			SparkFile sfs = new SparkFile(filename, pass, appendFiletype);
 			sfs.openForRead();
 			archive = sfs;
 			return;
@@ -23,7 +33,7 @@ public class ArchiveFileFactory
 
 		try
 		{
-			ArcFSFile afs = new ArcFSFile(filename, pass);
+			ArcFSFile afs = new ArcFSFile(filename, pass, appendFiletype);
 			afs.openForRead();
 			archive = afs;
 			return;
@@ -34,7 +44,7 @@ public class ArchiveFileFactory
 
 		try
 		{
-			PackDirFile pd = new PackDirFile(filename);
+			PackDirFile pd = new PackDirFile(filename, appendFiletype);
 			pd.openForRead();
 			archive = pd;
 			return;
@@ -45,7 +55,7 @@ public class ArchiveFileFactory
 
 		try
 		{
-			SquashFile sf = new SquashFile(filename);
+			SquashFile sf = new SquashFile(filename, appendFiletype);
 			sf.openForRead();
 			archive = sf;
 			return;
@@ -56,7 +66,7 @@ public class ArchiveFileFactory
 
 		try
 		{
-			CFSFile cfs = new CFSFile(filename);
+			CFSFile cfs = new CFSFile(filename, appendFiletype);
 			cfs.openForRead();
 			archive = cfs;
 			return;
@@ -67,7 +77,7 @@ public class ArchiveFileFactory
 
 		try
 		{
-			ZipFileWrapper z = new ZipFileWrapper(filename, null);
+			ZipFileWrapper z = new ZipFileWrapper(filename, null, appendFiletype);
 			z.openForRead();
 			archive = z;
 			return;
@@ -87,11 +97,6 @@ public class ArchiveFileFactory
 		{
 		}
 
-	}
-
-	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
-	{
-		this(filename, null);
 	}
 
 	public ArchiveFile getArchiveFile()

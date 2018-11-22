@@ -21,12 +21,11 @@ public class PackDirEntry extends ArchiveEntry
 	private long entry_offset;
 	private long next_entry_offset;
 
-	public PackDirEntry(PackDirFile packdir, RandomAccessInputStream in, int lzw_bits)
+	public PackDirEntry(PackDirFile packdir, RandomAccessInputStream in, int lzw_bits, boolean appendFiletype)
 	{
-		super(in, 0);
-		packdir_file = packdir;
-		maxbits = lzw_bits;
-		append_filetype = true;
+		super(in, 0, appendFiletype);
+		this.packdir_file = packdir;
+		this.maxbits = lzw_bits;
 	}
 
 	public void readEntry(String cur_dir, long offset) throws IOException

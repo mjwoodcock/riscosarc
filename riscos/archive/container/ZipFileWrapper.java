@@ -19,8 +19,14 @@ public class ZipFileWrapper extends ArchiveFile
 {
 	private ZipFile zipFile;
 	private Vector<ArchiveEntry> entry_list;
+	private boolean appendFiletype;
 
 	public ZipFileWrapper(String filename, String pass) throws IOException, InvalidArchiveFile
+	{
+		this(filename, pass, true);
+	}
+
+	public ZipFileWrapper(String filename, String pass, boolean appendFiletype) throws IOException, InvalidArchiveFile
 	{
 		try {
 			this.zipFile = new ZipFile(filename);
@@ -28,6 +34,7 @@ public class ZipFileWrapper extends ArchiveFile
 			throw new InvalidZipFile();
 		}
 		this.entry_list = new Vector<ArchiveEntry>();
+		this.appendFiletype = appendFiletype;
 	}
 
 	public int read32()
@@ -52,7 +59,7 @@ public class ZipFileWrapper extends ArchiveFile
 			try {
 				ZipEntry ze = entries.nextElement();
 				if (!ze.isDirectory()) {
-					this.entry_list.add(new ZipEntryWrapper(ze.getName(), this, ze));
+					this.entry_list.add(new ZipEntryWrapper(ze.getName(), this, ze, this.appendFiletype));
 				}
 			} catch (Exception e) {
 				throw new InvalidZipFile();

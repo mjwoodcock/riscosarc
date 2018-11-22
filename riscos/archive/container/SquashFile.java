@@ -18,11 +18,18 @@ public class SquashFile extends ArchiveFile
 	private RandomAccessInputStream in_file;
 	private String archive_file;
 	private Vector<ArchiveEntry> entry_list;
+	private boolean appendFiletype;
 
 	public SquashFile(String filename)
 	{
-		archive_file = filename;
-		entry_list = new Vector<ArchiveEntry>();
+		this(filename, true);
+	}
+
+	public SquashFile(String filename, boolean appendFiletype)
+	{
+		this.archive_file = filename;
+		this.entry_list = new Vector<ArchiveEntry>();
+		this.appendFiletype = appendFiletype;
 	}
 
 	public int read32() throws IOException
@@ -83,7 +90,7 @@ public class SquashFile extends ArchiveFile
 
 		long offset = in_file.getFilePointer();
 
-		SquashEntry se = new SquashEntry(this, in_file, archive_file);
+		SquashEntry se = new SquashEntry(this, in_file, archive_file, this.appendFiletype);
 		try
 		{
 			se.readEntry(offset);

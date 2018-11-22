@@ -22,16 +22,23 @@ public class PackDirFile extends ArchiveFile
 	private int dir_entriesi;
 	private int num_files;
 	private int num_dirs;
+	private boolean appendFiletype;
 
 	public PackDirFile(String filename)
 	{
-		archive_file = filename;
-		entry_list = new Vector<ArchiveEntry>();
-		current_dir = "";
-		dir_entries = new int[100];
-		dir_entriesi = -1;
-		num_files = 0;
-		num_dirs = 0;
+		this(filename, true);
+	}
+
+	public PackDirFile(String filename, boolean appendFiletype)
+	{
+		this.archive_file = filename;
+		this.entry_list = new Vector<ArchiveEntry>();
+		this.current_dir = "";
+		this.dir_entries = new int[100];
+		this.dir_entriesi = -1;
+		this.num_files = 0;
+		this.num_dirs = 0;
+		this.appendFiletype = appendFiletype;
 	}
 
 	public byte[] getPasswd()
@@ -109,7 +116,7 @@ public class PackDirFile extends ArchiveFile
 		long offset = in_file.getFilePointer();
 		do
 		{
-			PackDirEntry pde = new PackDirEntry(this, in_file, lzw_bits);
+			PackDirEntry pde = new PackDirEntry(this, in_file, lzw_bits, this.appendFiletype);
 			try
 			{
 				pde.readEntry(current_dir, offset);

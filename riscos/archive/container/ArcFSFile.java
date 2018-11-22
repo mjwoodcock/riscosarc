@@ -35,15 +35,22 @@ public class ArcFSFile extends ArchiveFile
 	private String current_dir;
 	private Vector<ArchiveEntry> entry_list;
 	private byte passwd[];
+	private boolean appendFiletype;
 
 	public ArcFSFile(String filename, String pass)
 	{
-		archive_file = filename;
-		entry_list = new Vector<ArchiveEntry>();
-		current_dir = "";
+		this(filename, pass, true);
+	}
+
+	public ArcFSFile(String filename, String pass, boolean appendFiletype)
+	{
+		this.archive_file = filename;
+		this.entry_list = new Vector<ArchiveEntry>();
+		this.current_dir = "";
+		this.appendFiletype = appendFiletype;
 		if (pass != null)
 		{
-			passwd = pass.getBytes();
+			this.passwd = pass.getBytes();
 		}
 	}
 
@@ -136,7 +143,7 @@ public class ArcFSFile extends ArchiveFile
 		int num_entries = header_length / 36;
 		for (int i = 0; i < num_entries; i++)
 		{
-			ArcFSEntry fse = new ArcFSEntry(this, in_file, data_start);
+			ArcFSEntry fse = new ArcFSEntry(this, in_file, data_start, this.appendFiletype);
 			try
 			{
 				fse.readEntry(current_dir, offset);

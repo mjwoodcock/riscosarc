@@ -25,6 +25,7 @@ public class riscosarc
 		System.err.println("  -g<password>: set password to <password>");
 		System.err.println("  -r: extract raw compressed data");
 		System.err.println("  -v: verbose list contents of file");
+		System.err.println("  -F: append RISC OS filetype to file name");
 		System.exit(1);
 	}
 
@@ -35,6 +36,7 @@ public class riscosarc
 		boolean do_extract = false;
 		boolean extract_raw = false;
 		boolean console_output = false;
+		boolean append_filetype = false;
 		String output_directory = ".";
 		String password = null;
 		String suffix = "";
@@ -78,6 +80,10 @@ public class riscosarc
 			{
 				do_extract = true;
 			}
+			else if (args[i].equals("-F"))
+			{
+				append_filetype = true;
+			}
 			else if (args[i].charAt(0) == '-')
 			{
 				riscosarc.usage();
@@ -101,7 +107,7 @@ public class riscosarc
 		ArchiveFileFactory aff;
 		ArchiveFile af;
 		try {
-			aff = new ArchiveFileFactory(args[archive_file_arg], password);
+			aff = new ArchiveFileFactory(args[archive_file_arg], password, append_filetype);
 			af = aff.getArchiveFile();
 			ent = af.entries();
 		} catch (Exception e) {

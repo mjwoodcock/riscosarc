@@ -15,18 +15,17 @@ public class ArcFSEntry extends ArchiveEntry
 	public static final int ARCFS_DELETED = 0x1;
 	public static final int ARCHPACK = 0x80;
 
-	private ArcFSFile spark_file;
+	private ArcFSFile arcFile;
 
 	private long entry_offset;
 	private long next_entry_offset;
 
-	public ArcFSEntry(ArcFSFile spark, RandomAccessInputStream in, int dat_start)
+	public ArcFSEntry(ArcFSFile arc, RandomAccessInputStream in, int dat_start, boolean appendFiletype)
 	{
-		super(in, dat_start);
-		spark_file = spark;
-		is_del = false;
-		is_eof = false;
-		append_filetype = true;
+		super(in, dat_start, appendFiletype);
+		this.arcFile = arc;
+		this.is_del = false;
+		this.is_eof = false;
 	}
 
 	private void readArcfsEntry(String cur_dir) throws IOException
@@ -61,15 +60,15 @@ public class ArcFSEntry extends ArchiveEntry
 		{
 			local_filename = ArchiveEntry.translateFilename(name);
 		}
-		origlen = spark_file.read32();
-		load = spark_file.read32();
-		exec = spark_file.read32();
-		int a = spark_file.read32();
+		origlen = arcFile.read32();
+		load = arcFile.read32();
+		exec = arcFile.read32();
+		int a = arcFile.read32();
 		crc = (a >> 16) & 0xffff;
 		attr = a & 0xff;
 		maxbits = ((a & 0xff00) >> 8) & 0xff;
-		complen = spark_file.read32();
-		int info_word = spark_file.read32();
+		complen = arcFile.read32();
+		int info_word = arcFile.read32();
 		seek = (info_word & 0x7fffffff) + data_start;
 		if (((info_word >> 31) & 0x1) != 0)
 		{

@@ -13,9 +13,9 @@ public class ZipEntryWrapper extends ArchiveEntry
 	private static final short EF_SPARK = 0x4341;
 	private static final int SPARKID_2 = 0x30435241;
 
-	public ZipEntryWrapper(String name, ZipFileWrapper zip, ZipEntry ze)
+	public ZipEntryWrapper(String name, ZipFileWrapper zip, ZipEntry ze, boolean appendFiletype)
 	{
-		super(null, 0);
+		super(null, 0, appendFiletype);
 		this.zipFile = zip;
 		this.zipEntry = ze;
 		this.name = name;
@@ -25,8 +25,8 @@ public class ZipEntryWrapper extends ArchiveEntry
 		super.crc = this.zipEntry.getCrc();
 		if (ze.getExtra() != null) {
 			parseExtraData(ze.getExtra());
+			appendFiletype();
 		}
-		append_filetype = true;
 	}
 
 	private short byteArrayToShort(byte b[], int offset)

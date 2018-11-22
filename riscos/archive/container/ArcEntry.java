@@ -21,11 +21,11 @@ public class ArcEntry extends ArchiveEntry
 
 	public ArcEntry(ArcFile spark, RandomAccessInputStream in, int dat_start)
 	{
-		super(in, dat_start);
+		/* MSDOS .arc files do not contain filetype information */
+		super(in, dat_start, false);
 		spark_file = spark;
 		is_del = false;
 		is_eof = false;
-		append_filetype = true;
 	}
 
 	private void readArcEntry(String cur_dir) throws IOException, InvalidArcFile
@@ -73,6 +73,7 @@ public class ArcEntry extends ArchiveEntry
 		if (!cur_dir.equals(""))
 		{
 			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
+
 		}
 		else
 		{
@@ -89,8 +90,7 @@ public class ArcEntry extends ArchiveEntry
 		origlen = spark_file.read32();
 		seek = (int)in_file.getFilePointer();
 		next_entry_offset = seek + complen + 1;
-//		calculateFileTime();
-//		appendFiletype();
+		/* FIXME: Calculate the file time */
 	}
 
 	public void readEntry(String cur_dir, long offset) throws IOException, InvalidArcFile
