@@ -8,16 +8,35 @@ public class ArchiveFileFactory
 {
 	private ArchiveFile archive;
 
+	/** Constructs an ArchiveFileFactory to open a file without a
+	 * password.  RISC OS filetype information will be appended to the
+	 * local filename.
+	 * @param filename the file to open
+	 */
 	public ArchiveFileFactory(String filename) throws IOException, InvalidArchiveFile
 	{
 		this(filename, null);
 	}
 
+	/** Constructs an ArchiveFileFactory to open a file with an optional
+	 * password.  RISC OS filetype information will be appended to the
+	 * local filename.
+	 * @param filename the file to open
+	 * @param pass the password.  Set to null for no password
+	 */
 	public ArchiveFileFactory(String filename, String pass) throws IOException, InvalidArchiveFile
 	{
 		this(filename, pass, true);
 	}
 
+	/** Constructs an ArchiveFileFactory to open a file with an optional
+	 * password.  The Factory will try to open the file using all
+	 * supported ArchiveFile types.
+	 * @param filename the file to open
+	 * @param pass the password.  Set to null for no password
+	 * @param appendFiletype RISC OS filetype information is appended to the local filename if true
+	 * @see ArchiveFile
+	 */
 	public ArchiveFileFactory(String filename, String pass, boolean appendFiletype) throws IOException, InvalidArchiveFile
 	{
 		try
@@ -99,6 +118,9 @@ public class ArchiveFileFactory
 
 	}
 
+	/** Gets the ArchiveFile opened by this Factory.
+	 * @return the ArchiveFile
+	 */
 	public ArchiveFile getArchiveFile()
 	{
 		return archive;

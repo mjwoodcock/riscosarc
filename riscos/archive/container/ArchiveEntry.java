@@ -32,6 +32,11 @@ public class ArchiveEntry
 	protected boolean append_filetype;
 
 
+	/** Constructs and ArchiveEntry.
+	 * @param in an input stream to read the data from
+	 * @param dat_start the location in the stream of the compressed data
+	 * @param appendFiletype true if the filetype should be appended to the filename.  False otherwise
+	 */
 	ArchiveEntry(RandomAccessInputStream in, int dat_start, boolean appendFiletype)
 	{
 		this.in_file = in;
@@ -39,6 +44,9 @@ public class ArchiveEntry
 		this.append_filetype = appendFiletype;
 	}
 
+	/**
+	 * Calculates the file time from the RISC OS load and exec values
+	 */
 	protected void calculateFileTime()
 	{
 		long high = (load & 0xff) - 0x33 & 0xffffffffl;
@@ -50,6 +58,9 @@ public class ArchiveEntry
 		file_date *= 1000;
 	}
 
+	/**
+	 * Deletes a stale file from the disk.
+	 */
 	public void cleanOldFile()
 	{
 		File f = new File(local_filename);
@@ -60,6 +71,9 @@ public class ArchiveEntry
 		}
 	}
 
+	/**
+	 * Stamps the file with the correct date stamp.
+	 */
 	public void setFileTime()
 	{
 		File f = new File(local_filename);
@@ -67,6 +81,10 @@ public class ArchiveEntry
 		f.setLastModified(file_date);
 	}
 
+	/**
+	 * Gets the RISC OS filetype from the RISC OS load value
+	 * @return the filetype
+	 */
 	protected int getFileType()
 	{
 		int filetype = -1;
@@ -78,6 +96,9 @@ public class ArchiveEntry
 		return filetype;
 	}
 
+	/**
+	 * Appends the RISC OS filetype to the filename if necessary.
+	 */
 	protected void appendFiletype()
 	{
 		if (append_filetype)
@@ -90,6 +111,12 @@ public class ArchiveEntry
 		}
 	}
 
+	/**
+	 * Translates the filename from a RISC OS representation to the
+	 * local representation.
+	 * @param roname the filename according to RISC OS
+	 * @return the filename suitable for the local filesystem
+	 */
 	protected static String translateFilename(String roname)
 	{
 		String localname = "";
@@ -111,21 +138,35 @@ public class ArchiveEntry
 		return localname;
 	}
 
+	/** Gets the length of the compressed data in the containing ArchiveFile
+	 * @return the compressed data length
+	 * @see ArchiveFile
+	 */
 	public int getCompressedLength()
 	{
 		return complen;
 	}
 
+	/** Gets the offset of the compressed data in the containing ArchiveFile
+	 * @return the offset of the data
+	 * @see ArchiveFile
+	 */
 	public long getOffset()
 	{
 		return seek;
 	}
 
+	/** Gets the length of the uncompressed data of this ArchiveEntry
+	 * @return the uncompressed file length
+	 */
 	public int getUncompressedLength()
 	{
 		return origlen;
 	}
 
+	/** Creates the directory structire needed to extract the file
+	 * @param prefix the base directory to create the structure in
+	 */
 	public void mkDir(String prefix)
 	{
 		File f = new File(prefix + File.separator + local_filename);
@@ -140,6 +181,9 @@ public class ArchiveEntry
 		}
 	}
 
+	/** Creates the directory structire (under the current directory)
+	 * needed to extract the file
+	 */
 	public void mkDir()
 	{
 		mkDir("");
@@ -150,6 +194,9 @@ public class ArchiveEntry
 		return is_dir;
 	}
 
+	/** Gets the filename as it would appear on the local filesystem
+	 * @return the local filename
+	 */
 	public String getLocalFilename()
 	{
 		return local_filename;
