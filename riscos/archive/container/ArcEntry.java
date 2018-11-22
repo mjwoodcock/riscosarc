@@ -70,14 +70,26 @@ public class ArcEntry extends ArchiveEntry
 			return;
 		}
 
-		if (!cur_dir.equals(""))
+		/* arc files created on RISC OS do not have their filenames
+		 * translated to MSDOS format.  Try to work out if the
+		 * filename should be translated to a valid local name */
+		String translatedName;
+		if (name.indexOf('/') != -1)
 		{
-			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
-
+			translatedName = ArchiveEntry.translateFilename(name);
 		}
 		else
 		{
-			local_filename = ArchiveEntry.translateFilename(name);
+			translatedName = name;
+		}
+
+		if (!cur_dir.equals(""))
+		{
+			local_filename = cur_dir + "/" + translatedName;
+		}
+		else
+		{
+			local_filename = translatedName;
 		}
 		complen = spark_file.read32();
 		if (complen < 0)
