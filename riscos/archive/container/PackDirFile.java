@@ -1,221 +1,195 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive.container;
 
-import riscos.archive.*;
+import riscos.archive.CRC;
+import riscos.archive.InvalidArchiveFile;
+import riscos.archive.InvalidCompressionType;
+import riscos.archive.InvalidPackDirCompressionType;
+import riscos.archive.InvalidPackDirFile;
+import riscos.archive.LZWConstants;
+import riscos.archive.LZWInputStream;
+import riscos.archive.LimitInputStream;
+import riscos.archive.NullCRC;
 import riscos.archive.RandomAccessInputStream;
+
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Vector;
 import java.util.Enumeration;
+import java.util.Vector;
 
-public class PackDirFile extends ArchiveFile
-{
-	public static final int CT_NOTCOMP = 0x01;
-	public static final int CT_LZW = 0x07;
+public class PackDirFile extends ArchiveFile {
 
-	private RandomAccessInputStream in_file;
-	private String archive_file;
-	private int lzw_bits;
-	private String current_dir;
-	private Vector<ArchiveEntry> entry_list;
-	private int dir_entries[];
-	private int dir_entriesi;
-	private int num_files;
-	private int num_dirs;
-	private boolean appendFiletype;
+  public static final int CT_NOTCOMP = 0x01;
+  public static final int CT_LZW = 0x07;
 
-	public PackDirFile(String filename)
-	{
-		this(filename, true);
-	}
+  private RandomAccessInputStream inFile;
+  private String archiveFile;
+  private int lzwBits;
+  private String currentDir;
+  private Vector<ArchiveEntry> entryList;
+  private int[] dirEndtries;
+  private int dirEntriesI;
+  private int numFiles;
+  private int numDirs;
+  private boolean appendFiletype;
 
-	public PackDirFile(String filename, boolean appendFiletype)
-	{
-		this.archive_file = filename;
-		this.entry_list = new Vector<ArchiveEntry>();
-		this.current_dir = "";
-		this.dir_entries = new int[100];
-		this.dir_entriesi = -1;
-		this.num_files = 0;
-		this.num_dirs = 0;
-		this.appendFiletype = appendFiletype;
-	}
+  public PackDirFile(String filename) {
+    this(filename, true);
+  }
 
-	public byte[] getPasswd()
-	{
-		return null;
-	}
+  public PackDirFile(String filename, boolean appendFiletype) {
+    this.archiveFile = filename;
+    this.entryList = new Vector<ArchiveEntry>();
+    this.currentDir = "";
+    this.dirEndtries = new int[100];
+    this.dirEntriesI = -1;
+    this.numFiles = 0;
+    this.numDirs = 0;
+    this.appendFiletype = appendFiletype;
+  }
 
-	public int read32() throws IOException
-	{
-		int r = 0;
+  public byte[] getPasswd() {
+    return null;
+  }
 
-		r = (in_file.read()) & 0xff;
-		r |= (in_file.read() & 0xff) << 8;
-		r |= (in_file.read() & 0xff) << 16;
-		r |= (in_file.read() & 0xff) << 24;
+  public int read32() throws IOException {
+    int r = 0;
 
-		return r;
-	}
+    r = (inFile.read()) & 0xff;
+    r |= (inFile.read() & 0xff) << 8;
+    r |= (inFile.read() & 0xff) << 16;
+    r |= (inFile.read() & 0xff) << 24;
 
-	public int read16() throws IOException
-	{
-		int r = 0;
+    return r;
+  }
 
-		r = (in_file.read()) & 0xff;
-		r |= (in_file.read() & 0xff) << 8;
+  public int read16() throws IOException {
+    int r = 0;
 
-		return r;
-	}
+    r = (inFile.read()) & 0xff;
+    r |= (inFile.read() & 0xff) << 8;
 
-	public String readString() throws IOException
-	{
-		StringBuffer s = new StringBuffer();
-		int r;
+    return r;
+  }
 
-		do
-		{
-			r = in_file.read();
-			if (r == -1) {
-				return null;
-			} else if (r != 0) {
-				s.append((char)r);
-			}
-		} while (r != 0);
+  public String readString() throws IOException {
+    StringBuffer s = new StringBuffer();
+    int r;
 
-		return s.toString();
-	}
+    do {
+      r = inFile.read();
+      if (r == -1) {
+        return null;
+      } else if (r != 0) {
+        s.append((char)r);
+      }
+    } while (r != 0);
 
-	private void readHeader() throws InvalidArchiveFile
-	{
-		try
-		{
-			String hdr = readString();
-			if (hdr.equals("PACK"))
-			{
-				lzw_bits = read32();
-				lzw_bits += 12;
-			}
-			else
-			{
-				throw new InvalidPackDirFile();
-			}
-		}
-		catch (IOException e)
-		{
-			throw new InvalidPackDirFile();
-		}
-	}
+    return s.toString();
+  }
 
-	public void openForRead() throws IOException, InvalidArchiveFile
-	{
-		in_file = new RandomAccessInputStream(archive_file);
+  private void readHeader() throws InvalidArchiveFile {
+    try {
+      String hdr = readString();
+      if (hdr.equals("PACK")) {
+        lzwBits = read32();
+        lzwBits += 12;
+      } else {
+        throw new InvalidPackDirFile();
+      }
+    } catch (IOException e) {
+      throw new InvalidPackDirFile();
+    }
+  }
 
-		readHeader();
+  public void openForRead() throws IOException, InvalidArchiveFile {
+    inFile = new RandomAccessInputStream(archiveFile);
 
-		long offset = in_file.getFilePointer();
-		do
-		{
-			PackDirEntry pde = new PackDirEntry(this, in_file, lzw_bits, this.appendFiletype);
-			try
-			{
-				pde.readEntry(current_dir, offset);
-				if (pde.isDir())
-				{
-					num_dirs++;
-					if (current_dir.equals(""))
-					{
-						current_dir = pde.getName();
-					}
-					else
-					{
-						current_dir = current_dir + "/" + pde.getName();
-					}
-					if (dir_entriesi >= 0)
-					{
-						--dir_entries[dir_entriesi];
-					}
-					dir_entries[++dir_entriesi] = pde.getNumEntries();
-				}
-				else
-				{
-					num_files++;
-					if (dir_entriesi >= 0)
-					{
-						--dir_entries[dir_entriesi];
-					}
-					entry_list.add(pde);
-				}
-				while (dir_entriesi >= 0 && dir_entries[dir_entriesi] == 0)
-				{
-					int i = current_dir.lastIndexOf('/');
+    readHeader();
 
-					if (i != -1)
-					{
-						current_dir = current_dir.substring(0, i);
-					}
-					else
-					{
-						current_dir = "";
-					}
-					dir_entriesi--;
-				}
-				offset = pde.getNextEntryOffset();
-			}
-			catch (IOException e)
-			{
-				System.err.println(e.toString());
-				break;
-			}
-		} while (dir_entries[0] > 0);
-	}
+    long offset = inFile.getFilePointer();
+    do {
+      PackDirEntry pde = new PackDirEntry(this, inFile, lzwBits, this.appendFiletype);
+      try {
+        pde.readEntry(currentDir, offset);
+        if (pde.isDir()) {
+          numDirs++;
+          if (currentDir.equals("")) {
+            currentDir = pde.getName();
+          } else {
+            currentDir = currentDir + "/" + pde.getName();
+          }
+          if (dirEntriesI >= 0) {
+            --dirEndtries[dirEntriesI];
+          }
+          dirEndtries[++dirEntriesI] = pde.getNumEntries();
+        } else {
+          numFiles++;
+          if (dirEntriesI >= 0) {
+            --dirEndtries[dirEntriesI];
+          }
+          entryList.add(pde);
+        }
+        while (dirEntriesI >= 0 && dirEndtries[dirEntriesI] == 0) {
+          int i = currentDir.lastIndexOf('/');
 
-	public Enumeration<ArchiveEntry> entries()
-	{
-		return entry_list.elements();
-	}
+          if (i != -1) {
+            currentDir = currentDir.substring(0, i);
+          } else {
+            currentDir = "";
+          }
+          dirEntriesI--;
+        }
+        offset = pde.getNextEntryOffset();
+      } catch (IOException e) {
+        System.err.println(e.toString());
+        break;
+      }
+    } while (dirEndtries[0] > 0);
+  }
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
-	{
-		try {
-			in_file.seek(entry.getOffset());
-		} catch (IOException e) {
-			throw new InvalidPackDirFile();
-		}
+  public Enumeration<ArchiveEntry> entries() {
+    return entryList.elements();
+  }
 
-		LimitInputStream lis = new LimitInputStream(in_file, entry.getCompressedLength());
+  public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType {
+    try {
+      inFile.seek(entry.getOffset());
+    } catch (IOException e) {
+      throw new InvalidPackDirFile();
+    }
 
-		switch (entry.getCompressType())
-		{
-		case CT_NOTCOMP:
-			return lis;
-		case CT_LZW:
-			return new LZWInputStream(lis, 0, riscos.archive.LZWConstants.PACKDIR, entry.getMaxBits());
-		default:
-			throw new InvalidPackDirCompressionType();
-		}
-	}
+    LimitInputStream lis = new LimitInputStream(inFile, entry.getCompressedLength());
 
-	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType
-	{
-		try {
-			in_file.seek(entry.getOffset());
-		} catch (IOException e) {
-			throw new InvalidPackDirFile();
-		}
+    switch (entry.getCompressType()) {
+      case CT_NOTCOMP:
+        return lis;
+      case CT_LZW:
+        return new LZWInputStream(lis, 0, riscos.archive.LZWConstants.PACKDIR, entry.getMaxBits());
+      default:
+        throw new InvalidPackDirCompressionType();
+    }
+  }
 
-		return new LimitInputStream(in_file, entry.getCompressedLength());
-	}
+  public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile, InvalidCompressionType {
+    try {
+      inFile.seek(entry.getOffset());
+    } catch (IOException e) {
+      throw new InvalidPackDirFile();
+    }
 
-	public void printInfo()
-	{
-		System.out.println("Number of bits: " + lzw_bits);
-		System.out.println("Number of files: " + num_files);
-		System.out.println("Number of dirs: " + num_dirs);
-	}
+    return new LimitInputStream(inFile, entry.getCompressedLength());
+  }
 
-	public CRC getCRCInstance()
-	{
-		return new NullCRC();
-	}
+  public void printInfo() {
+    System.out.println("Number of bits: " + lzwBits);
+    System.out.println("Number of files: " + numFiles);
+    System.out.println("Number of dirs: " + numDirs);
+  }
+
+  public CRC getCRCInstance() {
+    return new NullCRC();
+  }
 }

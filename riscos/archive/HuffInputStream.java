@@ -1,198 +1,152 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
 import java.io.FilterInputStream;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
-public class HuffInputStream extends FilterInputStream
-{
-	private class HuffTree
-	{
-		private short leftix;
-		private short rightix;
+public class HuffInputStream extends FilterInputStream {
 
-		public void setLeftIx(short i)
-		{
-			leftix = i;
-		}
+  private class HuffTree {
+    private short leftix;
+    private short rightix;
 
-		public void setRightIx(short i)
-		{
-			rightix = i;
-		}
+    public void setLeftIx(short idx) {
+      leftix = idx;
+    }
 
-		public short getChild(int direction)
-		{
-			if ((direction & 1) == 0)
-			{
-				return leftix;
-			}
+    public void setRightIx(short idx) {
+      rightix = idx;
+    }
 
-			return rightix;
-		}
+    public short getChild(int direction) {
+      if ((direction & 1) == 0) {
+        return leftix;
+      }
 
-	}
-		
-	private InputStream is;
-	private int curin;
-	private int bpos;
-	private HuffTree t[];
-	private static final int SPEOF = 256;
-	private boolean gotHuffTree;
-	private boolean atEof;
+      return rightix;
+    }
 
-	public HuffInputStream(InputStream in)
-	{
-		super(in);
+  }
 
-		is = in;
-		bpos = 99;
-		gotHuffTree = false;
-		atEof = false;
-	}
+  private InputStream is;
+  private int curin;
+  private int bpos;
+  private HuffTree[] tree;
+  private static final int SPEOF = 256;
+  private boolean gotHuffTree;
+  private boolean atEof;
 
-	public short
-	read16() throws IOException
-	{
-		char c = (char)is.read();
-		char c1 = (char)is.read();
+  public HuffInputStream(InputStream in) {
+    super(in);
 
-		return (short)(c | (c1 << 8));
-	}
+    is = in;
+    bpos = 99;
+    gotHuffTree = false;
+    atEof = false;
+  }
 
-	public void
-	get_hdr() throws IOException
-	{
-		if (!gotHuffTree)
-		{
-			short magic = read16();
-			short crc = read16();
-			String s = new String();
+  public short read16() throws IOException {
+    char c = (char)is.read();
+    char c1 = (char)is.read();
 
-			byte b;
-			do
-			{
-				b = (byte)is.read();
-				if (b != 0)
-				{
-					s = s + (char)b;
-				}
-			} while (b != 0);
+    return (short)(c | (c1 << 8));
+  }
 
-			System.out.println("magic = " + Integer.toHexString(magic));
-			System.out.println("crc = " + Integer.toHexString(crc));
-			System.out.println("Orig name = " + s);
+  public void get_hdr() throws IOException {
+    if (!gotHuffTree) {
+      short magic = read16();
+      short crc = read16();
+      String s = new String();
 
-			read_huff_tree();
-		}
-	}
+      byte b;
+      do {
+        b = (byte)is.read();
+        if (b != 0) {
+          s = s + (char)b;
+        }
+      } while (b != 0);
 
-	public void
-	read_huff_tree() throws IOException
-	{
-		if (!gotHuffTree)
-		{
-			short numnodes = read16();
+      System.out.println("magic = " + Integer.toHexString(magic));
+      System.out.println("crc = " + Integer.toHexString(crc));
+      System.out.println("Orig name = " + s);
 
-			t = new HuffTree[numnodes];
-			for (int i = 0; i < numnodes; i++)
-			{
-				t[i] = new HuffTree();
-				short r = read16();
-				t[i].setLeftIx(r);
-				r = read16();
-				t[i].setRightIx(r);
-			}
-			gotHuffTree = true;
-		}
-	}
+      read_huff_tree();
+    }
+  }
 
-	public int
-	gethuff() throws IOException
-	{
-		int i = 0;
+  public void read_huff_tree() throws IOException {
+    if (!gotHuffTree) {
+      short numnodes = read16();
 
-		if (atEof)
-		{
-			return -1;
-		}
-		do
-		{
-			if (++bpos > 7)
-			{
-				curin = is.read();
-				if (curin == -1)
-				{
-					return -1;
-				}
-				bpos = 0;
-				i = t[i].getChild(curin);
-			}
-			else
-			{
-				curin >>>= 1;
-				i = t[i].getChild(curin);
-			}
-		} while (i >= 0);
+      tree = new HuffTree[numnodes];
+      for (int i = 0; i < numnodes; i++) {
+        tree[i] = new HuffTree();
+        short r = read16();
+        tree[i].setLeftIx(r);
+        r = read16();
+        tree[i].setRightIx(r);
+      }
+      gotHuffTree = true;
+    }
+  }
 
-		i = -(i+1);
+  public int gethuff() throws IOException {
+    int i = 0;
 
-		if (i == SPEOF)
-		{
-			atEof = true;
-			i = -1;
-		}
+    if (atEof) {
+      return -1;
+    }
+    do {
+      if (++bpos > 7) {
+        curin = is.read();
+        if (curin == -1) {
+          return -1;
+        }
+        bpos = 0;
+        i = tree[i].getChild(curin);
+      } else {
+        curin >>>= 1;
+        i = tree[i].getChild(curin);
+      }
+    } while (i >= 0);
 
-		return i;
-	}
+    i = -(i + 1);
 
-	public int read() throws IOException
-	{
-		read_huff_tree();
+    if (i == SPEOF) {
+      atEof = true;
+      i = -1;
+    }
 
-		return gethuff();
-	}
+    return i;
+  }
 
-	public int read(byte buf[], int off, int len) throws IOException
-	{
-		int i = 0;
+  public int read() throws IOException {
+    read_huff_tree();
 
-		read_huff_tree();
+    return gethuff();
+  }
 
-		i = off;
-		while (i - off < len)
-		{
-			int b = gethuff();
-			if (b == -1)
-			{
-				break;
-			}
-			buf[i++] = (byte)b;
-		}
+  public int read(byte[] buf, int off, int len) throws IOException {
+    int i = 0;
 
-		if (i == 0 && atEof) {
-			return -1;
-		}
+    read_huff_tree();
 
-		return i - off;
-	}
-/*
-public static void
-main(String args[])
-{
-	rd r = new rd();
-	
-	try
-	{
-		r.get_hdr();
-		r.read_huff();
-		int i = r.gethuff();
-		System.out.println("Got char " + (char)i);
-	}
-	catch (IOException e)
-	{
-		System.out.println("Failed to read");
-	}
-}
-*/
+    i = off;
+    while (i - off < len) {
+      int b = gethuff();
+      if (b == -1) {
+        break;
+      }
+      buf[i++] = (byte)b;
+    }
+
+    if (i == 0 && atEof) {
+      return -1;
+    }
+
+    return i - off;
+  }
 
 }

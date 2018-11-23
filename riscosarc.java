@@ -1,215 +1,185 @@
-import riscos.archive.*;
+// vim:ts=2:sw=2:expandtab:ai
 import riscos.archive.CRC;
+import riscos.archive.LimitOutputStream;
+import riscos.archive.container.ArchiveEntry;
 import riscos.archive.container.ArchiveFile;
 import riscos.archive.container.ArchiveFileFactory;
-import riscos.archive.container.ArchiveEntry;
+
 import java.io.File;
-import java.io.InputStream;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Enumeration;
 
-public class riscosarc
-{
-	public static void usage()
-	{
-		System.err.println("Usage: java riscosarc <command> <argument> <archive_file> [filename]");
-		System.err.println("  command can be:");
-		System.err.println("  -l: list contents of file");
-		System.err.println("  -x: extract file");
-		System.err.println("  argument can be:");
-		System.err.println("  -c: extract console");
-		System.err.println("  -d<path>: extract files to <path>");
-		System.err.println("  -g<password>: set password to <password>");
-		System.err.println("  -r: extract raw compressed data");
-		System.err.println("  -v: verbose list contents of file");
-		System.err.println("  -F: append RISC OS filetype to file name");
-		System.exit(1);
-	}
+public class riscosarc {
 
-	public static void main(String args[])
-	{
-		boolean do_list = false;
-		boolean do_verbose = false;
-		boolean do_extract = false;
-		boolean extract_raw = false;
-		boolean console_output = false;
-		boolean append_filetype = false;
-		String output_directory = ".";
-		String password = null;
-		String suffix = "";
-		boolean error = false;
-		int archive_file_arg = -1;
-		String file_to_extract = null;
+  public static void usage() {
+    System.err.println("Usage: java riscosarc <command> <argument> <archiveFile> [filename]");
+    System.err.println("  command can be:");
+    System.err.println("  -l: list contents of file");
+    System.err.println("  -x: extract file");
+    System.err.println("  argument can be:");
+    System.err.println("  -c: extract console");
+    System.err.println("  -d<path>: extract files to <path>");
+    System.err.println("  -g<password>: set password to <password>");
+    System.err.println("  -r: extract raw compressed data");
+    System.err.println("  -v: verbose list contents of file");
+    System.err.println("  -F: append RISC OS filetype to file name");
+    System.exit(1);
+  }
 
-		if (args.length < 2)
-		{
-			riscosarc.usage();
-		}
+  public static void main(String[] args) {
+    boolean doList = false;
+    boolean doVerbose = false;
+    boolean doExtract = false;
+    boolean extractRaw = false;
+    boolean consoleOutput = false;
+    boolean appendFiletype = false;
+    String outputDirectory = ".";
+    String password = null;
+    String suffix = "";
+    boolean error = false;
+    int archiveFileArg = -1;
+    String fileToExtract = null;
 
-		for (int i = 0; i < args.length; i++)
-		{
-			if (args[i].startsWith("-c"))
-			{
-				console_output = true;
-			}
-			else if (args[i].startsWith("-d"))
-			{
-				output_directory = args[i].substring(2);
-			}
-			else if (args[i].startsWith("-g"))
-			{
-				password = args[i].substring(2);
-			}
-			else if (args[i].equals("-l"))
-			{
-				do_list = true;
-			}
-			else if (args[i].equals("-r"))
-			{
-				extract_raw = true;
-				suffix = ".raw";
-			}
-			else if (args[i].equals("-v"))
-			{
-				do_verbose = true;
-			}
-			else if (args[i].equals("-x"))
-			{
-				do_extract = true;
-			}
-			else if (args[i].equals("-F"))
-			{
-				append_filetype = true;
-			}
-			else if (args[i].charAt(0) == '-')
-			{
-				riscosarc.usage();
-			}
-			else
-			{
-				archive_file_arg = i;
-				break;
-			}
-		}
+    if (args.length < 2) {
+      riscosarc.usage();
+    }
 
-		if (!(do_extract || do_list) || archive_file_arg == -1) {
-				riscosarc.usage();
-		}
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].startsWith("-c")) {
+        consoleOutput = true;
+      } else if (args[i].startsWith("-d")) {
+        outputDirectory = args[i].substring(2);
+      } else if (args[i].startsWith("-g")) {
+        password = args[i].substring(2);
+      } else if (args[i].equals("-l")) {
+        doList = true;
+      } else if (args[i].equals("-r")) {
+        extractRaw = true;
+        suffix = ".raw";
+      } else if (args[i].equals("-v")) {
+        doVerbose = true;
+      } else if (args[i].equals("-x")) {
+        doExtract = true;
+      } else if (args[i].equals("-F")) {
+        appendFiletype = true;
+      } else if (args[i].charAt(0) == '-') {
+        riscosarc.usage();
+      } else {
+        archiveFileArg = i;
+        break;
+      }
+    }
 
-		if (archive_file_arg < args.length - 1) {
-			file_to_extract = args[archive_file_arg + 1];
-		}
+    if (!(doExtract || doList) || archiveFileArg == -1) {
+      riscosarc.usage();
+    }
 
-		Enumeration<ArchiveEntry> ent = null;
-		ArchiveFileFactory aff;
-		ArchiveFile af;
-		try {
-			aff = new ArchiveFileFactory(args[archive_file_arg], password, append_filetype);
-			af = aff.getArchiveFile();
-			ent = af.entries();
-		} catch (Exception e) {
-			error = true;
-			af = null;
-		}
+    if (archiveFileArg < args.length - 1) {
+      fileToExtract = args[archiveFileArg + 1];
+    }
 
-		if (ent == null) {
-			System.err.println("Invalid archive file");
-			System.exit(1);
-		}
+    Enumeration<ArchiveEntry> ent = null;
+    ArchiveFileFactory aff;
+    ArchiveFile af;
+    try {
+      aff = new ArchiveFileFactory(args[archiveFileArg], password, appendFiletype);
+      af = aff.getArchiveFile();
+      ent = af.entries();
+    } catch (Exception ex) {
+      error = true;
+      af = null;
+    }
 
-		try
-		{
-			while (ent.hasMoreElements())
-			{
-				ArchiveEntry entry = ent.nextElement();
-				if (do_list)
-				{
-					System.out.println(entry.getLocalFilename());
-				}
-				else if (do_verbose)
-				{
-					entry.printEntryData();
-				}
+    if (ent == null) {
+      System.err.println("Invalid archive file");
+      System.exit(1);
+    }
 
-				if (file_to_extract != null && !file_to_extract.equals(entry.getLocalFilename())) {
-					continue;
-				}
+    try {
+      while (ent.hasMoreElements()) {
+        ArchiveEntry entry = ent.nextElement();
+        if (doList) {
+          System.out.println(entry.getLocalFilename());
+        } else if (doVerbose) {
+          entry.printEntryData();
+        }
 
-				if (do_extract)
-				{
-					CRC crc = af.getCRCInstance();
-					crc.setDataLength(entry.getUncompressedLength());
-					entry.cleanOldFile();
-					entry.mkDir(output_directory);
-					try {
-						InputStream fis = null;
-						if (extract_raw) {
-							fis = af.getRawInputStream(entry);
-						} else {
-							fis = af.getInputStream(entry);
-						}
-						if (fis == null) {
-							System.err.println("Can not get input stream");
-							System.exit(1);
-						}
+        if (fileToExtract != null && !fileToExtract.equals(entry.getLocalFilename())) {
+          continue;
+        }
 
-						FileOutputStream fos = null;
-						LimitOutputStream los = null;
+        if (doExtract) {
+          CRC crc = af.getCRCInstance();
+          crc.setDataLength(entry.getUncompressedLength());
+          entry.cleanOldFile();
+          entry.mkDir(outputDirectory);
+          try {
+            InputStream fis = null;
+            if (extractRaw) {
+              fis = af.getRawInputStream(entry);
+            } else {
+              fis = af.getInputStream(entry);
+            }
+            if (fis == null) {
+              System.err.println("Can not get input stream");
+              System.exit(1);
+            }
 
-						if (console_output) {
-							los = new LimitOutputStream(System.out, entry.getUncompressedLength());
-						} else {
-							fos = new FileOutputStream(output_directory + File.separator + entry.getLocalFilename() + suffix);
-							los = new LimitOutputStream(fos, entry.getUncompressedLength());
-						}
+            FileOutputStream fos = null;
+            LimitOutputStream los = null;
 
-						int r = 0;
-						byte buf[] = new byte[1024];
-						do
-						{
-							r = fis.read(buf, 0, buf.length);
-							if (r != -1)
-							{
-								crc.update(buf, 0, r);
-								los.write(buf, 0, r);
-							}
-						} while (r != -1);
+            if (consoleOutput) {
+              los = new LimitOutputStream(System.out, entry.getUncompressedLength());
+            } else {
+              fos = new FileOutputStream(outputDirectory + File.separator
+                                         + entry.getLocalFilename() + suffix);
+              los = new LimitOutputStream(fos, entry.getUncompressedLength());
+            }
 
-						if (!console_output) {
-							if (los != null) {
-								los.close();
-							}
-							if (fos != null) {
-								fos.close();
-							}
+            int len = 0;
+            byte[] buf = new byte[1024];
+            do {
+              len = fis.read(buf, 0, buf.length);
+              if (len != -1) {
+                crc.update(buf, 0, len);
+                los.write(buf, 0, len);
+              }
+            } while (len != -1);
 
-							entry.setFileTime();
-						}
+            if (!consoleOutput) {
+              if (los != null) {
+                los.close();
+              }
+              if (fos != null) {
+                fos.close();
+              }
 
-						if (!extract_raw && !crc.compare(entry.getCrcValue())) {
-							System.out.println("CRC check failed");
-							error = true;
-						}
-					} catch (Exception e) {
-						System.out.println(e.toString());
-						e.printStackTrace(System.out);
-						error = true;
-					}
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			System.err.println(e.toString());
-			e.printStackTrace(System.out);
-			error = true;
-		}
+              entry.setFileTime();
+            }
 
-		if (error) {
-			System.exit(1);
-		}
-	}
+            if (!extractRaw && !crc.compare(entry.getCrcValue())) {
+              System.out.println("CRC check failed");
+              error = true;
+            }
+          } catch (Exception ex) {
+            System.out.println(ex.toString());
+            ex.printStackTrace(System.out);
+            error = true;
+          }
+        }
+      }
+    } catch (Exception ex) {
+      System.err.println(ex.toString());
+      ex.printStackTrace(System.out);
+      error = true;
+    }
+
+    if (error) {
+      System.exit(1);
+    }
+  }
 }

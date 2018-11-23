@@ -1,63 +1,57 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
 import java.io.FilterInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class LimitInputStream extends FilterInputStream
-{
-	private int total_size;
-	private InputStream is;
+public class LimitInputStream extends FilterInputStream {
 
-	public LimitInputStream(InputStream in, int total_siz)
-	{
-		super(in);
-		is = in;
-		total_size = total_siz;
-	}
+  private int totalSize;
+  private InputStream is;
 
-	public void close()
-	{
-	}
+  public LimitInputStream(InputStream in, int totalSiz) {
+    super(in);
+    is = in;
+    totalSize = totalSiz;
+  }
 
-	public int read() throws IOException
-	{
-		if (total_size == 0)
-		{
-			return -1;
-		}
+  public void close() {
+  }
 
-		int b = is.read();
-		if (b != -1)
-		{
-			--total_size;
-		}
+  public int read() throws IOException {
+    if (totalSize == 0) {
+      return -1;
+    }
 
-		return b;
-	}
+    int b = is.read();
+    if (b != -1) {
+      --totalSize;
+    }
 
-	public int read(byte buf[]) throws IOException
-	{
-		return read(buf, 0, buf.length);
-	}
+    return b;
+  }
 
-	public int read(byte buf[], int off, int len) throws IOException
-	{
-		int size;
-		
-		if (total_size == 0)
-		{
-			return -1;
-		}
+  public int read(byte[] buf) throws IOException {
+    return read(buf, 0, buf.length);
+  }
 
-		size = total_size > len ? len : total_size;
-		int r = is.read(buf, off, size);
-		if (r == -1)
-		{
-			return -1;
-		}
-		total_size -= r;
+  public int read(byte[] buf, int off, int len) throws IOException {
+    int size;
 
-		return r;
-	}
+    if (totalSize == 0) {
+      return -1;
+    }
+
+    size = totalSize > len ? len : totalSize;
+    int r = is.read(buf, off, size);
+    if (r == -1) {
+      return -1;
+    }
+    totalSize -= r;
+
+    return r;
+  }
+
 }

@@ -1,49 +1,45 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 /* A class to calculate the CRC of Zip data */
+
 package riscos.archive;
 
 import java.util.zip.CRC32;
 
-public class ZipCRC extends CRC
-{
-	private long crcValue;
-	CRC32 crc32;
+public class ZipCRC extends CRC {
 
-	public ZipCRC()
-	{
-		crc32 = new CRC32();
-	}
+  private long crcValue;
+  CRC32 crc32;
 
-	public void setDataLength(int crcSize)
-	{
-	}
+  public ZipCRC() {
+    crc32 = new CRC32();
+  }
 
-	public void update(byte c)
-	{
-		crc32.update(c);
-	}
+  public void setDataLength(int crcSize) {
+  }
 
-	public void update(byte[] chunk, int offset, int length)
-	{
-		crc32.update(chunk, offset, length);
-	}
+  public void update(byte chr) {
+    crc32.update(chr);
+  }
 
-	public void update(byte[] chunk)
-	{
-		update(chunk, 0, chunk.length);
-	}
+  public void update(byte[] chunk, int offset, int length) {
+    crc32.update(chunk, offset, length);
+  }
 
-	public void reset()
-	{
-		crc32.reset();
-	}
+  public void update(byte[] chunk) {
+    update(chunk, 0, chunk.length);
+  }
 
-	public long getValue()
-	{
-		return this.getValue();
-	}
+  public void reset() {
+    crc32.reset();
+  }
 
-	public boolean compare(long crcVal)
-	{
-		return crc32.getValue() == crcVal;
-	}
+  public long getValue() {
+    return this.getValue();
+  }
+
+  public boolean compare(long crcVal) {
+    return crc32.getValue() == crcVal;
+  }
+
 }

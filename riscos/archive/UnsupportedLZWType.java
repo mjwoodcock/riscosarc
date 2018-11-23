@@ -1,11 +1,11 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
-import riscos.archive.LZWConstants;
+public class UnsupportedLZWType extends Exception {
 
-public class UnsupportedLZWType extends Exception
-{
-	public UnsupportedLZWType()
-	{
-		super("LZW type not supported by this class");
-	}
+  public UnsupportedLZWType() {
+    super("LZW type not supported by this class");
+  }
+
 }

@@ -1,11 +1,10 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
-import java.lang.Exception;
+public abstract class InvalidCompressionType extends Exception {
 
-public abstract class InvalidCompressionType extends Exception
-{
-	public InvalidCompressionType(String msg)
-	{
-		super(msg);
-	}
+  public InvalidCompressionType(String msg) {
+    super(msg);
+  }
 }

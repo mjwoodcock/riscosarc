@@ -1,119 +1,107 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive.container;
 
-import riscos.archive.*;
+import riscos.archive.NcompressLZWInputStream;
+import riscos.archive.RandomAccessInputStream;
 import riscos.archive.container.ArcFSFile;
 import riscos.archive.container.ArchiveEntry;
-import java.io.FilterInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.FileNotFoundException;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
 
-public class ArcFSEntry extends ArchiveEntry
-{
-	public static final int ARCFS_ENDDIR = 0x0;
-	public static final int ARCFS_DELETED = 0x1;
-	public static final int ARCHPACK = 0x80;
+public class ArcFSEntry extends ArchiveEntry {
 
-	private ArcFSFile arcFile;
+  public static final int ARCFS_ENDDIR = 0x0;
+  public static final int ARCFS_DELETED = 0x1;
+  public static final int ARCHPACK = 0x80;
 
-	private long entry_offset;
-	private long next_entry_offset;
+  private ArcFSFile arcFile;
 
-	public ArcFSEntry(ArcFSFile arc, RandomAccessInputStream in, int dat_start, boolean appendFiletype)
-	{
-		super(in, dat_start, appendFiletype);
-		this.arcFile = arc;
-		this.is_del = false;
-		this.is_eof = false;
-	}
+  private long entryOffset;
+  private long nextEntryOffset;
 
-	private void readArcfsEntry(String cur_dir) throws IOException
-	{
-		byte n[] = new byte[12];
-		n[11] = 0;
-		int r = in_file.read();
-		if (r == -1)
-		{
-			is_eof = true;
-		}
-		comptype = r & 0xff;
-		if (comptype == 0x1)
-		{
-			is_del = true;
-		}
-		in_file.read(n, 0, n.length - 1);
-		int nul;
-		for (nul = 0; nul < n.length; nul++)
-		{
-			if (n[nul] == 0)
-			{
-				break;
-			}
-		}
-		name = new String(n, 0, nul);
-		if (!cur_dir.equals(""))
-		{
-			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
-		}
-		else
-		{
-			local_filename = ArchiveEntry.translateFilename(name);
-		}
-		origlen = arcFile.read32();
-		load = arcFile.read32();
-		exec = arcFile.read32();
-		int a = arcFile.read32();
-		crc = (a >> 16) & 0xffff;
-		attr = a & 0xff;
-		maxbits = ((a & 0xff00) >> 8) & 0xff;
-		complen = arcFile.read32();
-		int info_word = arcFile.read32();
-		seek = (info_word & 0x7fffffff) + data_start;
-		if (((info_word >> 31) & 0x1) != 0)
-		{
-			is_dir = true;
-		}
-		else
-		{
-			is_dir = false;
-		}
-		appendFiletype();
-		calculateFileTime();
-		next_entry_offset = in_file.getFilePointer();
-	}
+  public ArcFSEntry(ArcFSFile arc, RandomAccessInputStream in, int datStart, boolean appendFiletype) {
+    super(in, datStart, appendFiletype);
+    this.arcFile = arc;
+    this.isDel = false;
+    this.isEof = false;
+  }
 
-	public void readEntry(String cur_dir, long offset) throws IOException
-	{
-		in_file.seek(offset);
-		entry_offset = in_file.getFilePointer();
+  private void readArcfsEntry(String curDir) throws IOException {
+    byte[] n = new byte[12];
+    n[11] = 0;
+    int r = inFile.read();
+    if (r == -1) {
+      isEof = true;
+    }
+    comptype = r & 0xff;
+    if (comptype == 0x1) {
+      isDel = true;
+    }
+    inFile.read(n, 0, n.length - 1);
+    int nul;
+    for (nul = 0; nul < n.length; nul++) {
+      if (n[nul] == 0) {
+        break;
+      }
+    }
+    name = new String(n, 0, nul);
+    if (!curDir.equals("")) {
+      localFilename = curDir + "/" + ArchiveEntry.translateFilename(name);
+    } else {
+      localFilename = ArchiveEntry.translateFilename(name);
+    }
+    origlen = arcFile.read32();
+    load = arcFile.read32();
+    exec = arcFile.read32();
+    int a = arcFile.read32();
+    crc = (a >> 16) & 0xffff;
+    attr = a & 0xff;
+    maxbits = ((a & 0xff00) >> 8) & 0xff;
+    complen = arcFile.read32();
+    int infoWord = arcFile.read32();
+    seek = (infoWord & 0x7fffffff) + dataStart;
+    if (((infoWord >> 31) & 0x1) != 0) {
+      isDir = true;
+    } else {
+      isDir = false;
+    }
+    appendFiletype();
+    calculateFileTime();
+    nextEntryOffset = inFile.getFilePointer();
+  }
 
-		readArcfsEntry(cur_dir);
-	}
+  public void readEntry(String curDir, long offset) throws IOException {
+    inFile.seek(offset);
+    entryOffset = inFile.getFilePointer();
 
-	public void printEntryData()
-	{
-		System.out.println("Comptype = " + comptype);
-		System.out.println("Name " + name);
-		System.out.println("Local name " + local_filename);
-		System.out.println("Origlen " + origlen);
-		System.out.println("Load " + load);
-		System.out.println("Exec " + exec);
-		System.out.println("CRC " + crc);
-		System.out.println("attr " + attr);
-		System.out.println("maxbits " + maxbits);
-		System.out.println("complen " + complen);
-		System.out.println("seek " + seek);
-		System.out.println("is_dir " + is_dir);
-	}
+    readArcfsEntry(curDir);
+  }
 
-	public boolean isEof()
-	{
-		return is_eof;
-	}
+  public void printEntryData() {
+    System.out.println("Comptype = " + comptype);
+    System.out.println("Name " + name);
+    System.out.println("Local name " + localFilename);
+    System.out.println("Origlen " + origlen);
+    System.out.println("Load " + load);
+    System.out.println("Exec " + exec);
+    System.out.println("CRC " + crc);
+    System.out.println("attr " + attr);
+    System.out.println("maxbits " + maxbits);
+    System.out.println("complen " + complen);
+    System.out.println("seek " + seek);
+    System.out.println("isDir " + isDir);
+  }
 
-	public long getNextEntryOffset()
-	{
-		return next_entry_offset;
-	}
+  public boolean isEof() {
+    return isEof;
+  }
+
+  public long getNextEntryOffset() {
+    return nextEntryOffset;
+  }
 }

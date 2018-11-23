@@ -1,120 +1,108 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
-import java.io.PushbackInputStream;
 import java.io.FilterInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
 
-public class BitInputStream extends FilterInputStream
-{
-	private static final int EIGHT = 8;
-	private static final int DEFAULT_BIT_SIZE = EIGHT;
-	private static final int DEFAULT_BUFFER_SIZE = 1024;
-	private long buf;
-	private int bit_size;
-	private long bit_mask;
-	private int bits_avail;
-	private InputStream is;
-	private byte byte_buf[];
-	private int byte_bufi;
-	private int byte_buf_len;
+public class BitInputStream extends FilterInputStream {
 
-	public BitInputStream(InputStream in)
-	{
-		this(in, DEFAULT_BUFFER_SIZE, DEFAULT_BIT_SIZE);
-	}
+  private static final int EIGHT = 8;
+  private static final int DEFAULT_BIT_SIZE = EIGHT;
+  private static final int DEFAULT_BUFFER_SIZE = 1024;
+  private long buf;
+  private int bitSize;
+  private long bitMask;
+  private int bitsAvail;
+  private InputStream is;
+  private byte[] byteBuf;
+  private int byteBufI;
+  private int byteBufLen;
 
-	public BitInputStream(InputStream in, int size)
-	{
-		this(in, size, DEFAULT_BIT_SIZE);
-	}
+  public BitInputStream(InputStream in) {
+    this(in, DEFAULT_BUFFER_SIZE, DEFAULT_BIT_SIZE);
+  }
 
-	public BitInputStream(InputStream in, int size, int bs)
-	{
-		super(in);
-		bit_size = bs;
-		bit_mask = (1 << bs) - 1;
-		bits_avail = 0;
-		buf = 0;
-		is = in;
-		byte_buf = new byte[20];
-		byte_bufi = 0;
-		byte_buf_len = 0;
-	}
-	
-	public void setBitSize(int bs)
-	{
-		if (bit_size != bs)
-		{
-			bit_size = bs;
-			bit_mask = (1 << bs) - 1;
-			byte_bufi = bs;
-		}
-	}
+  public BitInputStream(InputStream in, int size) {
+    this(in, size, DEFAULT_BIT_SIZE);
+  }
 
-	public void close()
-	{
-	}
+  public BitInputStream(InputStream in, int size, int bs) {
+    super(in);
+    bitSize = bs;
+    bitMask = (1 << bs) - 1;
+    bitsAvail = 0;
+    buf = 0;
+    is = in;
+    byteBuf = new byte[20];
+    byteBufI = 0;
+    byteBufLen = 0;
+  }
 
-	public int readBitField() throws IOException
-	{
-		int read_bits = bit_size;
-		int r = 0;
+  public void setBitSize(int bs) {
+    if (bitSize != bs) {
+      bitSize = bs;
+      bitMask = (1 << bs) - 1;
+      byteBufI = bs;
+    }
+  }
 
-		while (bits_avail < bit_size)
-		{
-			if (byte_bufi >= bit_size)
-			{
-				r = is.read(byte_buf, 0, bit_size);
-				if (r < 0)
-				{
-					return -1;
-				}
-				bits_avail = 0;
-				byte_bufi = 0;
-				byte_buf_len = r;
-			}
-			if (r == -1 || byte_bufi >= byte_buf_len)
-			{
-				return -1;
-			}
-			r = (int)byte_buf[byte_bufi++] & 0xff;
-			buf |= (r << bits_avail);
-			bits_avail += EIGHT;
-			buf &= (((1 << (bits_avail)) - 1));
-		}
+  public void close() {
+  }
 
-		r = (int)(buf & bit_mask);
-		buf = buf >> read_bits;
-		bits_avail -= read_bits;
-		buf &= ((1 << bits_avail) - 1);
+  public int readBitField() throws IOException {
+    int readBits = bitSize;
+    int r = 0;
 
-		return r;
-	}
+    while (bitsAvail < bitSize) {
+      if (byteBufI >= bitSize) {
+        r = is.read(byteBuf, 0, bitSize);
+        if (r < 0) {
+          return -1;
+        }
+        bitsAvail = 0;
+        byteBufI = 0;
+        byteBufLen = r;
+      }
+      if (r == -1 || byteBufI >= byteBufLen) {
+        return -1;
+      }
+      r = (int)byteBuf[byteBufI++] & 0xff;
+      buf |= (r << bitsAvail);
+      bitsAvail += EIGHT;
+      buf &= (((1 << (bitsAvail)) - 1));
+    }
 
-	public int readPackDirBitField() throws IOException
-	{
-		int read_bits = bit_size;
-		int r = 0;
+    r = (int)(buf & bitMask);
+    buf = buf >> readBits;
+    bitsAvail -= readBits;
+    buf &= ((1 << bitsAvail) - 1);
 
-		while (bits_avail < bit_size)
-		{
-			r = is.read();
-			if (r == -1)
-			{
-				return -1;
-			}
-			buf |= (r << bits_avail);
-			bits_avail += EIGHT;
-			buf &= (((1 << (bits_avail)) - 1));
-		}
+    return r;
+  }
 
-		r = (int)(buf & bit_mask);
-		buf = buf >> read_bits;
-		bits_avail -= read_bits;
-		buf &= ((1 << bits_avail) - 1);
+  public int readPackDirBitField() throws IOException {
+    int readBits = bitSize;
+    int r = 0;
 
-		return r;
-	}
+    while (bitsAvail < bitSize) {
+      r = is.read();
+      if (r == -1) {
+        return -1;
+      }
+      buf |= (r << bitsAvail);
+      bitsAvail += EIGHT;
+      buf &= (((1 << (bitsAvail)) - 1));
+    }
+
+    r = (int)(buf & bitMask);
+    buf = buf >> readBits;
+    bitsAvail -= readBits;
+    buf &= ((1 << bitsAvail) - 1);
+
+    return r;
+  }
 
 }

@@ -1,40 +1,34 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 /* A class to handle container files that do not hold CRC information */
 
 package riscos.archive;
 
-public class NullCRC extends CRC
-{
-	public NullCRC()
-	{
-	}
+public class NullCRC extends CRC {
 
-	public void setDataLength(int crcSize)
-	{
-	}
+  public NullCRC() {
+  }
 
-	public void update(byte c)
-	{
-	}
+  public void setDataLength(int crcSize) {
+  }
 
-	public void update(byte[] chunk, int offset, int length)
-	{
-	}
+  public void update(byte val) {
+  }
 
-	public void update(byte[] chunk)
-	{
-	}
+  public void update(byte[] chunk, int offset, int length) {
+  }
 
-	public void reset()
-	{
-	}
+  public void update(byte[] chunk) {
+  }
 
-	public long getValue()
-	{
-		return 0;
-	}
+  public void reset() {
+  }
 
-	public boolean compare(long crcVal)
-	{
-		return true;
-	}
+  public long getValue() {
+    return 0;
+  }
+
+  public boolean compare(long crcVal) {
+    return true;
+  }
 }

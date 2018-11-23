@@ -1,121 +1,112 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive.container;
 
+import riscos.archive.CFSInputStream;
 import riscos.archive.CRC;
+import riscos.archive.InvalidArchiveFile;
+import riscos.archive.InvalidCFSFile;
+import riscos.archive.LimitInputStream;
 import riscos.archive.NullCRC;
 import riscos.archive.RandomAccessInputStream;
-import riscos.archive.InvalidCFSFile;
-import riscos.archive.InvalidArchiveFile;
-import riscos.archive.CFSInputStream;
-import riscos.archive.LimitInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Vector;
 import java.util.Enumeration;
+import java.util.Vector;
 
-public class CFSFile extends ArchiveFile
-{
-	private RandomAccessInputStream in_file;
-	private String archive_file;
-	private Vector<ArchiveEntry> entry_list;
-	private boolean appendFiletype;
+public class CFSFile extends ArchiveFile {
 
-	public CFSFile(String filename)
-	{
-		this(filename, true);
-	}
+  private RandomAccessInputStream inFile;
+  private String archiveFile;
+  private Vector<ArchiveEntry> entryList;
+  private boolean appendFiletype;
 
-	public CFSFile(String filename, boolean appendFiletype)
-	{
-		this.archive_file = filename;
-		this.entry_list = new Vector<ArchiveEntry>();
-		this.appendFiletype = appendFiletype;
-	}
+  public CFSFile(String filename) {
+    this(filename, true);
+  }
 
-	public int read32() throws IOException
-	{
-		int r = 0;
+  public CFSFile(String filename, boolean appendFiletype) {
+    this.archiveFile = filename;
+    this.entryList = new Vector<ArchiveEntry>();
+    this.appendFiletype = appendFiletype;
+  }
 
-		r = (this.in_file.read()) & 0xff;
-		r |= (this.in_file.read() & 0xff) << 8;
-		r |= (this.in_file.read() & 0xff) << 16;
-		r |= (this.in_file.read() & 0xff) << 24;
+  public int read32() throws IOException {
+    int r = 0;
 
-		return r;
-	}
+    r = (this.inFile.read()) & 0xff;
+    r |= (this.inFile.read() & 0xff) << 8;
+    r |= (this.inFile.read() & 0xff) << 16;
+    r |= (this.inFile.read() & 0xff) << 24;
 
-	public int read16() throws IOException
-	{
-		return 0xffffffff;
-	}
+    return r;
+  }
 
-	private void readHeader() throws InvalidArchiveFile
-	{
-		try {
-			read32();
-			int magic = read32();
-			if (magic != 0x303) {
-				throw new InvalidCFSFile();
-			}
-		} catch (IOException e) {
-			// throw strop
-		}
-	}
+  public int read16() throws IOException {
+    return 0xffffffff;
+  }
 
-	public void openForRead() throws IOException, InvalidArchiveFile
-	{
-		this.in_file = new RandomAccessInputStream(this.archive_file);
+  private void readHeader() throws InvalidArchiveFile {
+    try {
+      read32();
+      int magic = read32();
+      if (magic != 0x303) {
+        throw new InvalidCFSFile();
+      }
+    } catch (IOException e) {
+      // throw strop
+    }
+  }
 
-		readHeader();
+  public void openForRead() throws IOException, InvalidArchiveFile {
+    this.inFile = new RandomAccessInputStream(this.archiveFile);
 
-		CFSEntry se = new CFSEntry(this, this.in_file, this.archive_file, this.appendFiletype);
-		try {
-			se.readEntry(0);
-			this.entry_list.add(se);
-		} catch (IOException e) {
-			System.err.println(e.toString());
-		}
-	}
+    readHeader();
 
-	public Enumeration<ArchiveEntry> entries()
-	{
-		return this.entry_list.elements();
-	}
+    CFSEntry se = new CFSEntry(this, this.inFile, this.archiveFile, this.appendFiletype);
+    try {
+      se.readEntry(0);
+      this.entryList.add(se);
+    } catch (IOException e) {
+      System.err.println(e.toString());
+    }
+  }
 
-	public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile
-	{
-		try {
-			this.in_file.seek(entry.getOffset());
-		} catch (IOException e) {
-			throw new InvalidCFSFile();
-		}
+  public Enumeration<ArchiveEntry> entries() {
+    return this.entryList.elements();
+  }
 
-		LimitInputStream lis = new LimitInputStream(this.in_file, entry.getCompressedLength());
+  public InputStream getInputStream(ArchiveEntry entry) throws InvalidArchiveFile {
+    try {
+      this.inFile.seek(entry.getOffset());
+    } catch (IOException e) {
+      throw new InvalidCFSFile();
+    }
 
-		return new CFSInputStream(lis);
-	}
+    LimitInputStream lis = new LimitInputStream(this.inFile, entry.getCompressedLength());
 
-	public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile
-	{
-		try {
-			this.in_file.seek(entry.getOffset());
-		} catch (IOException e) {
-			throw new InvalidCFSFile();
-		}
+    return new CFSInputStream(lis);
+  }
 
-		return new LimitInputStream(this.in_file, entry.getCompressedLength());
-	}
+  public InputStream getRawInputStream(ArchiveEntry entry) throws InvalidArchiveFile {
+    try {
+      this.inFile.seek(entry.getOffset());
+    } catch (IOException e) {
+      throw new InvalidCFSFile();
+    }
 
-	public void printInfo()
-	{
-	}
+    return new LimitInputStream(this.inFile, entry.getCompressedLength());
+  }
 
-	public byte[] getPasswd()
-	{
-		return null;
-	}
+  public void printInfo() {
+  }
 
-	public CRC getCRCInstance()
-	{
-		return new NullCRC();
-	}
+  public byte[] getPasswd() {
+    return null;
+  }
+
+  public CRC getCRCInstance() {
+    return new NullCRC();
+  }
 }

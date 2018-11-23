@@ -1,363 +1,350 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive;
 
 
 /* Code taken from David Pilling's FileShrinker code from
  * https://www.davidpilling.com/wiki/index.php/FileShrinker */
 
-/* FIXME: Implrement ZEROBLOCK */
+/* FIXME: Implement ZEROBLOCK */
 import java.io.FilterInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public class CFSInputStream extends FilterInputStream
-{
-	private static final int ENDBLOCK = 0x0;
-	private static final int COMPRESSEDBLOCK = 0x1;
-	private static final int RAWBLOCK = 0x2;
-	private static final int HEADERBLOCK = 0x3;
-	private static final int ZEROBLOCK = 0x4;
+public class CFSInputStream extends FilterInputStream {
 
-	private static final int DEFAULT_BUFFER_SIZE = 1024;
-	private static final int DEFAULT_BITS = 12;
-	private static final int FIRST_FREE = 256;
-	private static final int MAXTOKLEN = 0x4000;
+  private static final int ENDBLOCK = 0x0;
+  private static final int COMPRESSEDBLOCK = 0x1;
+  private static final int RAWBLOCK = 0x2;
+  private static final int HEADERBLOCK = 0x3;
+  private static final int ZEROBLOCK = 0x4;
 
-	private InputStream is;
-	private int bits;
-	private int highcode;
-	private int nextfree;
-	private int maxbits;
-	private int maxmaxcode;
-	private int codelimit;
-	private int blocktype;
-	private int shift;
+  private static final int DEFAULT_BUFFER_SIZE = 1024;
+  private static final int DEFAULT_BITS = 12;
+  private static final int FIRST_FREE = 256;
+  private static final int MAXTOKLEN = 0x4000;
 
-	private byte src_buffer[];
-	private int src_bufferi;
-	private int src_bufferif;
-	private int src_buffer_end;
+  private InputStream is;
+  private int bits;
+  private int highcode;
+  private int nextfree;
+  private int maxbits;
+  private int maxmaxcode;
+  private int codelimit;
+  private int blocktype;
+  private int shift;
 
-	private byte block_buffer[];
-	private int block_bufferi;
-	private int block_buffer_end;
-	private int block_buffer_read;
+  private byte[] srcBuffer;
+  private int srcBufferI;
+  private int srcBufferIF;
+  private int srcBufferEnd;
 
-	private int token[];
-	private int pfx[];
+  private byte[] blockBuffer;
+  private int blockBufferI;
+  private int blockBufferEnd;
+  private int blockBufferRead;
 
-	private boolean got_header;
+  private int[] token;
+  private int[] pfx;
 
-	protected boolean eos;
+  private boolean gotHeader;
 
-	private int get_char() throws IOException
-	{
-		if (this.src_bufferi == this.src_buffer_end) {
-			fillSrcBuffer();
-		}
+  protected boolean eos;
 
-		if (this.src_bufferi == this.src_buffer_end) {
-			return -1;
-		}
+  private int getChar() throws IOException {
+    if (this.srcBufferI == this.srcBufferEnd) {
+      fillSrcBuffer();
+    }
 
-		int c = this.src_buffer[this.src_bufferi++] & 0xff;
+    if (this.srcBufferI == this.srcBufferEnd) {
+      return -1;
+    }
 
-		return c;
-	}
+    int c = this.srcBuffer[this.srcBufferI++] & 0xff;
 
-	private void fillSrcBuffer() throws IOException
-	{
-		if (this.src_bufferi > 0) {
-			System.arraycopy(this.src_buffer, this.src_bufferi,
-					this.src_buffer, 0,
-					this.src_buffer_end - this.src_bufferi);
-			this.src_buffer_end -= this.src_bufferi;
-			this.src_bufferif -= this.src_bufferi;
-			this.src_bufferi = 0;
-		}
-		int r = is.read(this.src_buffer, this.src_buffer_end,
-				this.src_buffer.length - this.src_buffer_end);
-		if (r != -1) {
-			this.src_buffer_end += r;
-		}
-		
-	}
+    return c;
+  }
 
-	private void addCharToBlockBuffer(int c)
-	{
-		this.block_buffer[this.block_bufferi++] = (byte)c;
-	}
+  private void fillSrcBuffer() throws IOException {
+    if (this.srcBufferI > 0) {
+      System.arraycopy(this.srcBuffer, this.srcBufferI,
+                       this.srcBuffer, 0,
+                       this.srcBufferEnd - this.srcBufferI);
+      this.srcBufferEnd -= this.srcBufferI;
+      this.srcBufferIF -= this.srcBufferI;
+      this.srcBufferI = 0;
+    }
+    int r = is.read(this.srcBuffer, this.srcBufferEnd,
+        this.srcBuffer.length - this.srcBufferEnd);
+    if (r != -1) {
+      this.srcBufferEnd += r;
+    }
 
-	private void copyCharsToBlockBuffer(int buf[], int offset, int len)
-	{
-		while (len-- > 0) {
-			if (this.block_bufferi >= this.block_buffer.length) {
-				byte b[] = new byte[this.block_buffer.length * 2];
-				System.arraycopy(this.block_buffer, 0, b, 0, this.block_buffer.length);
-				this.block_buffer = b;
-				this.block_buffer_end = this.block_buffer.length;
-			}
-			this.block_buffer[this.block_bufferi++] = (byte)buf[offset++];
-		}
-	}
+  }
 
-	private void copySrcToBlockBuffer(int len)
-	{
-		if (len > this.src_buffer_end - this.src_bufferi) {
-			len = this.src_buffer_end - this.src_bufferi;
-		}
-		System.arraycopy(this.src_buffer, this.src_bufferi, this.block_buffer, this.block_bufferi, len);
-		this.block_bufferi += len;
-		this.block_buffer_end += len;
-		this.src_bufferi += len;
-		this.src_bufferif += this.src_bufferif;
-	}
+  private void addCharToBlockBuffer(int chr) {
+    this.blockBuffer[this.blockBufferI++] = (byte)chr;
+  }
 
-	private int nextcode() throws IOException
-	{
-		int i = this.src_bufferi;
-		int diff = this.shift + this.bits;
-		int code = 0;
+  private void copyCharsToBlockBuffer(int[] buf, int offset, int len) {
+    while (len-- > 0) {
+      if (this.blockBufferI >= this.blockBuffer.length) {
+        byte[] b = new byte[this.blockBuffer.length * 2];
+        System.arraycopy(this.blockBuffer, 0, b, 0, this.blockBuffer.length);
+        this.blockBuffer = b;
+        this.blockBufferEnd = this.blockBuffer.length;
+      }
+      this.blockBuffer[this.blockBufferI++] = (byte)buf[offset++];
+    }
+  }
 
-		if (((this.src_buffer_end - i) << 3) < diff) {
-			fillSrcBuffer();
-			i = this.src_bufferi;
-			if (((this.src_buffer_end - i) << 3) < diff) {
-				return -1;
-			}
-		}
+  private void copySrcToBlockBuffer(int len) {
+    if (len > this.srcBufferEnd - this.srcBufferI) {
+      len = this.srcBufferEnd - this.srcBufferI;
+    }
+    System.arraycopy(this.srcBuffer, this.srcBufferI, this.blockBuffer, this.blockBufferI, len);
+    this.blockBufferI += len;
+    this.blockBufferEnd += len;
+    this.srcBufferI += len;
+    this.srcBufferIF += this.srcBufferIF;
+  }
 
-		diff -= 16;
-		if (diff > 0) {
-			code = get_char();
-			code |= get_char() << 8;
-			code |= this.src_buffer[this.src_bufferi] << 16;
-			code >>= shift;
-			shift = diff;
-		} else {
-			code = get_char();
-			code |= (int)(this.src_buffer[this.src_bufferi] << 8);
-			code &= 0xffff;
-			code >>= this.shift;
-			this.shift = 8 + diff;
-			if (this.shift == 0) {
-				this.src_bufferi++;
-			}
-		}
+  private int nextcode() throws IOException {
+    int i = this.srcBufferI;
+    int diff = this.shift + this.bits;
+    int code = 0;
 
-		return (code & this.highcode);
-	}
+    if (((this.srcBufferEnd - i) << 3) < diff) {
+      fillSrcBuffer();
+      i = this.srcBufferI;
+      if (((this.srcBufferEnd - i) << 3) < diff) {
+        return -1;
+      }
+    }
 
-	private void readHeader() throws IOException
-	{
-		if (!this.got_header)
-		{
-			this.got_header = true;
+    diff -= 16;
+    if (diff > 0) {
+      code = getChar();
+      code |= getChar() << 8;
+      code |= this.srcBuffer[this.srcBufferI] << 16;
+      code >>= shift;
+      shift = diff;
+    } else {
+      code = getChar();
+      code |= (int)(this.srcBuffer[this.srcBufferI] << 8);
+      code &= 0xffff;
+      code >>= this.shift;
+      this.shift = 8 + diff;
+      if (this.shift == 0) {
+        this.srcBufferI++;
+      }
+    }
 
-			this.maxbits = 12;
+    return (code & this.highcode);
+  }
 
-			this.maxmaxcode = (1 << maxbits) - 1;
-			this.pfx = new int[this.maxmaxcode + 1];
-			this.bits = 9;
-		}
-	}
+  private void readHeader() throws IOException {
+    if (!this.gotHeader) {
+      this.gotHeader = true;
 
-	private void setBitSize(int bits, boolean start) throws IOException
-	{
-		if (start) {
-			if (this.src_bufferi > this.src_bufferif) {
-				if (this.shift > 0) {
-					this.src_bufferi++;
-				}
+      this.maxbits = 12;
 
-				this.shift = this.src_bufferi - this.src_bufferif;
-				this.shift = (shift + 0x3) & (~0x3);
-				this.src_bufferi = this.src_bufferif + shift;
-			}
+      this.maxmaxcode = (1 << maxbits) - 1;
+      this.pfx = new int[this.maxmaxcode + 1];
+      this.bits = 9;
+    }
+  }
 
-			this.shift = 0;
-			this.blocktype = get_char();
-			if (this.blocktype == -1) {
-				this.blocktype = ENDBLOCK;
-				return;
-			}
-			this.codelimit = get_char();
-			this.codelimit |= get_char() << 8;
-			this.codelimit |= get_char() << 16;
-			if (this.blocktype == COMPRESSEDBLOCK) {
-				this.codelimit += 0xff;
-			}
-			this.block_buffer = new byte[this.codelimit];
-			this.block_bufferi = 0;
-			this.block_buffer_end = this.codelimit;
-			this.src_bufferif = this.src_bufferi;
-		} else {
-			this.shift += 1;
-		}
-		this.bits = bits;
-	}
+  private void setBitSize(int bits, boolean start) throws IOException {
+    if (start) {
+      if (this.srcBufferI > this.srcBufferIF) {
+        if (this.shift > 0) {
+          this.srcBufferI++;
+        }
 
-	private int readCFSBlock() throws IOException
-	{
-		this.highcode = (1 << 9) - 1;
-		this.bits = 9;
-		setBitSize(this.bits, true);
-		this.nextfree = FIRST_FREE;
+        this.shift = this.srcBufferI - this.srcBufferIF;
+        this.shift = (shift + 0x3) & (~0x3);
+        this.srcBufferI = this.srcBufferIF + shift;
+      }
 
-		int p, q;
+      this.shift = 0;
+      this.blocktype = getChar();
+      if (this.blocktype == -1) {
+        this.blocktype = ENDBLOCK;
+        return;
+      }
+      this.codelimit = getChar();
+      this.codelimit |= getChar() << 8;
+      this.codelimit |= getChar() << 16;
+      if (this.blocktype == COMPRESSEDBLOCK) {
+        this.codelimit += 0xff;
+      }
+      this.blockBuffer = new byte[this.codelimit];
+      this.blockBufferI = 0;
+      this.blockBufferEnd = this.codelimit;
+      this.srcBufferIF = this.srcBufferI;
+    } else {
+      this.shift += 1;
+    }
+    this.bits = bits;
+  }
 
-		p = q = MAXTOKLEN - 1;
+  private int readCFSBlock() throws IOException {
+    this.highcode = (1 << 9) - 1;
+    this.bits = 9;
+    setBitSize(this.bits, true);
+    this.nextfree = FIRST_FREE;
 
-		if (this.blocktype == COMPRESSEDBLOCK) {
-			int code, savecode;
-			int prefixcode = nextcode();
-			if (prefixcode < 0) {
-				return -1;
-			}
+    int p;
+    int q;
 
-			int sufxchar = prefixcode;
-			addCharToBlockBuffer(sufxchar);
+    p = q = MAXTOKLEN - 1;
 
-			while (this.nextfree < this.codelimit &&
-				(code = savecode = nextcode()) >= 0) {
-				p = q;
+    if (this.blocktype == COMPRESSEDBLOCK) {
+      int code;
+      int savecode;
+      int prefixcode = nextcode();
 
-				if (code >= this.nextfree) {
-					if (code != this.nextfree) {
-//						throw new InvalidCFSFile();
-						return -1;
-					}
+      if (prefixcode < 0) {
+        return -1;
+      }
 
-					code = prefixcode;
-					token[p--] = sufxchar;
-				}
-				while (code >= 256) {
-					code = this.pfx[code];
-					token[p--] = code;
-					code >>= 8;
-				}
+      int sufxchar = prefixcode;
+      addCharToBlockBuffer(sufxchar);
 
-				this.token[p--] = sufxchar = code;
-				copyCharsToBlockBuffer(token, p + 1, q - p);
+      while (this.nextfree < this.codelimit
+             && (code = savecode = nextcode()) >= 0) {
+        p = q;
 
-				// if (!(256 <= nextfree && nextfree <= maxcode)) throw strop
-				this.pfx[this.nextfree] = (prefixcode << 8) | sufxchar;
-				prefixcode = savecode;
-				if (this.nextfree++ == this.highcode) {
-					this.bits++;
-					setBitSize(this.bits, false);
-					this.highcode += this.nextfree;
-				}
-			}
-		} else if (this.blocktype == RAWBLOCK) {
-			if (this.src_buffer_end - this.src_bufferi < this.codelimit) {
-				fillSrcBuffer();
-			}
-			copySrcToBlockBuffer(this.codelimit);
-		} else if (this.blocktype == ZEROBLOCK) {
-			System.out.println("ZEROBLOCK not handled");
-		} else if (this.blocktype == ENDBLOCK) {
-			return -1;
-		} else {
-			return -1;
-//			throw new IOException();
-		}
+        if (code >= this.nextfree) {
+          if (code != this.nextfree) {
+            //throw new InvalidCFSFile();
+            return -1;
+          }
 
-		return 0;
-	}
+          code = prefixcode;
+          token[p--] = sufxchar;
+        }
+        while (code >= 256) {
+          code = this.pfx[code];
+          token[p--] = code;
+          code >>= 8;
+        }
 
-	public CFSInputStream(InputStream in)
-	{
-		this(in, DEFAULT_BUFFER_SIZE, DEFAULT_BITS);
-	}
+        this.token[p--] = sufxchar = code;
+        copyCharsToBlockBuffer(token, p + 1, q - p);
 
-	public CFSInputStream(InputStream in, int siz, int bit)
-	{
-		super(in);
-		this.maxbits = bit;
-		this.eos = false;
-		this.is = in;
-		this.got_header = false;
-		this.src_buffer = new byte[0x4000];
-		this.src_bufferi = 0;
-		this.token = new int[MAXTOKLEN];
-	}
+        // if (!(256 <= nextfree && nextfree <= maxcode)) throw strop
+        this.pfx[this.nextfree] = (prefixcode << 8) | sufxchar;
+        prefixcode = savecode;
+        if (this.nextfree++ == this.highcode) {
+          this.bits++;
+          setBitSize(this.bits, false);
+          this.highcode += this.nextfree;
+        }
+      }
+    } else if (this.blocktype == RAWBLOCK) {
+      if (this.srcBufferEnd - this.srcBufferI < this.codelimit) {
+        fillSrcBuffer();
+      }
+      copySrcToBlockBuffer(this.codelimit);
+    } else if (this.blocktype == ZEROBLOCK) {
+      System.out.println("ZEROBLOCK not handled");
+    } else if (this.blocktype == ENDBLOCK) {
+      return -1;
+    } else {
+      return -1;
+      //throw new IOException();
+    }
 
-	public void close() throws IOException
-	{
-	}
+    return 0;
+  }
 
-	public int read() throws IOException
-	{
-		byte buf[] = new byte[1];
+  public CFSInputStream(InputStream in) {
+    this(in, DEFAULT_BUFFER_SIZE, DEFAULT_BITS);
+  }
 
-		// FIXME: Do this without an expensive memory copy in 
-		// copyBuffer
-		int r = read(buf);
-		if (r == -1)
-		{
-			return -1;
-		}
-		
-		return buf[0];
-	}
+  public CFSInputStream(InputStream in, int siz, int bit) {
+    super(in);
+    this.maxbits = bit;
+    this.eos = false;
+    this.is = in;
+    this.gotHeader = false;
+    this.srcBuffer = new byte[0x4000];
+    this.srcBufferI = 0;
+    this.token = new int[MAXTOKLEN];
+  }
 
-	public int read(byte buf[]) throws IOException
-	{
-		return read(buf, 0, buf.length);
-	}
+  public void close() throws IOException {
+  }
 
-	public int read(byte buf[], int off, int len) throws IOException
-	{
-		int r = -1;
-		int l = len;
-		int o = off;
-		
-		if (eos) {
-			return -1;
-		}
+  public int read() throws IOException {
+    byte[] buf = new byte[1];
 
-		readHeader();
+    // FIXME: Do this without an expensive memory copy in
+    // copyBuffer
+    int r = read(buf);
+    if (r == -1) {
+      return -1;
+    }
 
-		int bytes_to_copy = -1;
-		int bytes_copied = 0;
-		boolean did_partial = false;
-		while (l > 0) {
-			if (l > this.block_bufferi - this.block_buffer_read) {
-				bytes_to_copy = this.block_bufferi - this.block_buffer_read;
-				if (this.block_bufferi > this.block_buffer_read) {
-					System.arraycopy(this.block_buffer, this.block_buffer_read,
-						buf, o,
-						bytes_to_copy);
-				}
-				bytes_copied += bytes_to_copy;
-				o += bytes_to_copy;
-				l -= bytes_to_copy;
-				this.block_bufferi = this.block_buffer_read = 0;
-				did_partial = true;
-				r = readCFSBlock();
-				if (r == -1) {
-					this.eos = true;
-					return bytes_copied;
-				}
-			}
+    return buf[0];
+  }
 
-			if (this.block_bufferi - this.block_buffer_read == 0) {
-				break;
-			}
-			bytes_to_copy = l > (this.block_bufferi - this.block_buffer_read) ?
-					(this.block_bufferi - this.block_buffer_read)
-					: l;
+  public int read(byte[] buf) throws IOException {
+    return read(buf, 0, buf.length);
+  }
 
-			System.arraycopy(this.block_buffer, this.block_buffer_read,
-						buf, o,
-						bytes_to_copy);
+  public int read(byte[] buf, int off, int len) throws IOException {
+    int r = -1;
+    int l = len;
+    int o = off;
 
-			this.block_buffer_read += bytes_to_copy;
-			l -= bytes_to_copy;
-			o += bytes_to_copy;
-			bytes_copied += bytes_to_copy;
-		}
+    if (eos) {
+      return -1;
+    }
 
-		return bytes_copied;
-	}
+    readHeader();
+
+    int bytesToCopy = -1;
+    int bytesCopied = 0;
+    boolean didPartial = false;
+    while (l > 0) {
+      if (l > this.blockBufferI - this.blockBufferRead) {
+        bytesToCopy = this.blockBufferI - this.blockBufferRead;
+        if (this.blockBufferI > this.blockBufferRead) {
+          System.arraycopy(this.blockBuffer, this.blockBufferRead,
+                           buf, o, bytesToCopy);
+        }
+        bytesCopied += bytesToCopy;
+        o += bytesToCopy;
+        l -= bytesToCopy;
+        this.blockBufferI = this.blockBufferRead = 0;
+        didPartial = true;
+        r = readCFSBlock();
+        if (r == -1) {
+          this.eos = true;
+          return bytesCopied;
+        }
+      }
+
+      if (this.blockBufferI - this.blockBufferRead == 0) {
+        break;
+      }
+      bytesToCopy = l > (this.blockBufferI - this.blockBufferRead)
+                        ? (this.blockBufferI - this.blockBufferRead)
+                        : l;
+
+      System.arraycopy(this.blockBuffer, this.blockBufferRead,
+            buf, o,
+            bytesToCopy);
+
+      this.blockBufferRead += bytesToCopy;
+      l -= bytesToCopy;
+      o += bytesToCopy;
+      bytesCopied += bytesToCopy;
+    }
+
+    return bytesCopied;
+  }
 }

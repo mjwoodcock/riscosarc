@@ -1,154 +1,136 @@
+// vim:ts=2:sw=2:expandtab:ai
+
 package riscos.archive.container;
 
-import riscos.archive.*;
-import riscos.archive.container.SparkFile;
+import riscos.archive.GarbleInputStream;
+import riscos.archive.HuffInputStream;
+import riscos.archive.InvalidSparkFile;
+import riscos.archive.LimitInputStream;
+import riscos.archive.NcompressLZWInputStream;
+import riscos.archive.RandomAccessInputStream;
 import riscos.archive.container.ArchiveEntry;
-import java.io.FilterInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.FileNotFoundException;
+import riscos.archive.container.SparkFile;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
 
-public class SparkEntry extends ArchiveEntry
-{
-	public static final int SPARKFS_ENDDIR = 0x0;
-	public static final int ARCHPACK = 0x80;
+public class SparkEntry extends ArchiveEntry {
+  public static final int SPARKFS_ENDDIR = 0x0;
+  public static final int ARCHPACK = 0x80;
 
-	private SparkFile spark_file;
+  private SparkFile sparkFile;
 
-	private long entry_offset;
-	private long next_entry_offset;
+  private long entryOffset;
+  private long nextEntyOffset;
 
-	public SparkEntry(SparkFile spark, RandomAccessInputStream in, int dat_start, boolean appendFiletype)
-	{
-		super(in, dat_start, appendFiletype);
-		spark_file = spark;
-		is_del = false;
-		is_eof = false;
-	}
+  public SparkEntry(SparkFile spark, RandomAccessInputStream in, int datStart, boolean appendFiletype) {
+    super(in, datStart, appendFiletype);
+    sparkFile = spark;
+    isDel = false;
+    isEof = false;
+  }
 
-	private void readSparkEntry(String cur_dir) throws IOException, InvalidSparkFile
-	{
-		int date;
-		int time;
-		int r = in_file.read();
+  private void readSparkEntry(String curDir) throws IOException, InvalidSparkFile {
+    int r = inFile.read();
 
-		if (r == -1)
-		{
-			is_eof = true;
-			return;
-		}
+    if (r == -1) {
+      isEof = true;
+      return;
+    }
 
-		comptype = r & 0xff;
-		if ((comptype & ~ARCHPACK) == 0)
-		{
-			comptype = SPARKFS_ENDDIR;
-			is_eof = true;
-			return;
-		}
-		
-		byte n[] = new byte[14];
-		n[12] = '\0';
-		in_file.read(n, 0, n.length - 1);
-		int nul;
-		for (nul = 0; nul < n.length; nul++)
-		{
-			if (n[nul] < ' ' || n[nul] > '~')
-			{
-				n[nul] = '\0';
-				break;
-			}
-		}
+    comptype = r & 0xff;
+    if ((comptype & ~ARCHPACK) == 0) {
+      comptype = SPARKFS_ENDDIR;
+      isEof = true;
+      return;
+    }
 
-		name = new String(n, 0, nul);
-		if (name.length() == 0)
-		{
-			/* Some old Spark files have some extra empty
-			 * data on the end. */
-			is_eof = true;
-			comptype = SPARKFS_ENDDIR;
-			return;
-		}
+    byte[] n = new byte[14];
+    n[12] = '\0';
+    inFile.read(n, 0, n.length - 1);
+    int nul;
+    for (nul = 0; nul < n.length; nul++) {
+      if (n[nul] < ' ' || n[nul] > '~') {
+        n[nul] = '\0';
+        break;
+      }
+    }
 
-		if (!cur_dir.equals(""))
-		{
-			local_filename = cur_dir + "/" + ArchiveEntry.translateFilename(name);
-		}
-		else
-		{
-			local_filename = ArchiveEntry.translateFilename(name);
-		}
-		complen = spark_file.read32();
-		if (complen < 0)
-		{
-			throw new InvalidSparkFile();
-		}
-		date = spark_file.read16();
-		time = spark_file.read16();
-		crc = spark_file.read16();
-		if ((comptype & ~ARCHPACK) > SparkFile.CT_NOTCOMP)
-		{
-			origlen = spark_file.read32();
-		}
-		else
-		{
-			origlen = complen;
-		}
-		if ((comptype & ARCHPACK) == ARCHPACK)
-		{
-			load = spark_file.read32();
-			exec = spark_file.read32();
-			attr = spark_file.read32();
-		}
-		comptype &= ~ARCHPACK;
-		seek = (int)in_file.getFilePointer();
-		if ((load & 0xffffff00) == 0xfffddc00)
-		{
-			is_dir = true;
-		}
-		if (is_dir)
-		{
-			next_entry_offset = seek + 1;
-		}
-		else
-		{
-			next_entry_offset = seek + complen + 1;
-		}
-		calculateFileTime();
-		appendFiletype();
-	}
+    name = new String(n, 0, nul);
+    if (name.length() == 0) {
+      /* Some old Spark files have some extra empty
+       * data on the end. */
+      isEof = true;
+      comptype = SPARKFS_ENDDIR;
+      return;
+    }
 
-	public void readEntry(String cur_dir, long offset) throws IOException, InvalidSparkFile
-	{
-		in_file.seek(offset);
-		entry_offset = in_file.getFilePointer();
+    if (!curDir.equals("")) {
+      localFilename = curDir + "/" + ArchiveEntry.translateFilename(name);
+    } else {
+      localFilename = ArchiveEntry.translateFilename(name);
+    }
+    complen = sparkFile.read32();
+    if (complen < 0) {
+      throw new InvalidSparkFile();
+    }
+    int date = sparkFile.read16();
+    int time = sparkFile.read16();
+    crc = sparkFile.read16();
+    if ((comptype & ~ARCHPACK) > SparkFile.CT_NOTCOMP) {
+      origlen = sparkFile.read32();
+    } else {
+      origlen = complen;
+    }
+    if ((comptype & ARCHPACK) == ARCHPACK) {
+      load = sparkFile.read32();
+      exec = sparkFile.read32();
+      attr = sparkFile.read32();
+    }
+    comptype &= ~ARCHPACK;
+    seek = (int)inFile.getFilePointer();
+    if ((load & 0xffffff00) == 0xfffddc00) {
+      isDir = true;
+    }
+    if (isDir) {
+      nextEntyOffset = seek + 1;
+    } else {
+      nextEntyOffset = seek + complen + 1;
+    }
+    calculateFileTime();
+    appendFiletype();
+  }
 
-		readSparkEntry(cur_dir);
-	}
+  public void readEntry(String curDir, long offset) throws IOException, InvalidSparkFile {
+    inFile.seek(offset);
+    entryOffset = inFile.getFilePointer();
 
-	public void printEntryData()
-	{
-		System.out.println("Comptype = " + comptype);
-		System.out.println("Name " + name);
-		System.out.println("Local name " + local_filename);
-		System.out.println("Origlen " + origlen);
-		System.out.println("Load " + load);
-		System.out.println("Exec " + exec);
-		System.out.println("CRC " + crc);
-		System.out.println("attr " + attr);
-		System.out.println("maxbits " + maxbits);
-		System.out.println("complen " + complen);
-		System.out.println("seek " + seek);
-		System.out.println("is_dir " + is_dir);
-	}
+    readSparkEntry(curDir);
+  }
 
-	public boolean isEof()
-	{
-		return is_eof;
-	}
+  public void printEntryData() {
+    System.out.println("Comptype = " + comptype);
+    System.out.println("Name " + name);
+    System.out.println("Local name " + localFilename);
+    System.out.println("Origlen " + origlen);
+    System.out.println("Load " + load);
+    System.out.println("Exec " + exec);
+    System.out.println("CRC " + crc);
+    System.out.println("attr " + attr);
+    System.out.println("maxbits " + maxbits);
+    System.out.println("complen " + complen);
+    System.out.println("seek " + seek);
+    System.out.println("isDir " + isDir);
+  }
 
-	public long getNextEntryOffset()
-	{
-		return next_entry_offset;
-	}
+  public boolean isEof() {
+    return isEof;
+  }
+
+  public long getNextEntryOffset() {
+    return nextEntyOffset;
+  }
 }
