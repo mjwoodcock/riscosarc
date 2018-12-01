@@ -21,15 +21,17 @@ public class SquashFile extends ArchiveFile {
   private String archiveFile;
   private Vector<ArchiveEntry> entryList;
   private boolean appendFiletype;
+  private int options;
 
   public SquashFile(String filename) {
-    this(filename, true);
+    this(filename, true, 0);
   }
 
-  public SquashFile(String filename, boolean appendFiletype) {
+  public SquashFile(String filename, boolean appendFiletype, int options) {
     this.archiveFile = filename;
     this.entryList = new Vector<ArchiveEntry>();
     this.appendFiletype = appendFiletype;
+    this.options = options;
   }
 
   public int read32() throws IOException {

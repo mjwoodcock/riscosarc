@@ -44,10 +44,12 @@ public class ArcFile extends ArchiveFile {
   private String currentDir;
   private Vector<ArchiveEntry> entryList;
   private byte[] passwd;
+  private int options;
 
-  public ArcFile(String filename, String pass) {
+  public ArcFile(String filename, String pass, int options) {
     archiveFile = filename;
     entryList = new Vector<ArchiveEntry>();
+    this.options = options;
     currentDir = "";
     if (pass != null) {
       passwd = pass.getBytes();

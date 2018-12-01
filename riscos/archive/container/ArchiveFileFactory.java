@@ -31,18 +31,31 @@ public class ArchiveFileFactory {
   }
 
   /** Constructs an ArchiveFileFactory to open a file with an optional
+   * password.  RISC OS filetype information will be appended to the
+   * local filename.
+   * @param filename the file to open
+   * @param pass the password.  Set to null for no password
+   * @param appendFiletype RISC OS filetype information is appended to the local filename if true
+   */
+  public ArchiveFileFactory(String filename, String pass, boolean appendFiletype) throws IOException, InvalidArchiveFile {
+    this(filename, pass, appendFiletype, 0);
+  }
+
+  /** Constructs an ArchiveFileFactory to open a file with an optional
    * password.  The Factory will try to open the file using all
    * supported ArchiveFile types.
    * @param filename the file to open
    * @param pass the password.  Set to null for no password
    * @param appendFiletype RISC OS filetype information is appended to the local filename if true
+   * @param options Option flags from ArchiveFile.*_OPT
    * @see ArchiveFile
    */
   public ArchiveFileFactory(String filename, String pass,
-                            boolean appendFiletype) throws IOException,
-                                                           InvalidArchiveFile {
+                            boolean appendFiletype,
+                            int options) throws IOException,
+                                                InvalidArchiveFile {
     try {
-      SparkFile sfs = new SparkFile(filename, pass, appendFiletype);
+      SparkFile sfs = new SparkFile(filename, pass, appendFiletype, options);
       sfs.openForRead();
       archive = sfs;
       return;
@@ -50,7 +63,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      ArcFSFile afs = new ArcFSFile(filename, pass, appendFiletype);
+      ArcFSFile afs = new ArcFSFile(filename, pass, appendFiletype, options);
       afs.openForRead();
       archive = afs;
       return;
@@ -58,7 +71,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      PackDirFile pd = new PackDirFile(filename, appendFiletype);
+      PackDirFile pd = new PackDirFile(filename, appendFiletype, options);
       pd.openForRead();
       archive = pd;
       return;
@@ -66,7 +79,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      SquashFile sf = new SquashFile(filename, appendFiletype);
+      SquashFile sf = new SquashFile(filename, appendFiletype, options);
       sf.openForRead();
       archive = sf;
       return;
@@ -74,7 +87,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      CFSFile cfs = new CFSFile(filename, appendFiletype);
+      CFSFile cfs = new CFSFile(filename, appendFiletype, options);
       cfs.openForRead();
       archive = cfs;
       return;
@@ -82,7 +95,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      ZipFileWrapper zip = new ZipFileWrapper(filename, null, appendFiletype);
+      ZipFileWrapper zip = new ZipFileWrapper(filename, null, appendFiletype, options);
       zip.openForRead();
       archive = zip;
       return;
@@ -90,7 +103,7 @@ public class ArchiveFileFactory {
     }
 
     try {
-      ArcFile arc = new ArcFile(filename, null);
+      ArcFile arc = new ArcFile(filename, null, options);
       arc.openForRead();
       archive = arc;
       return;

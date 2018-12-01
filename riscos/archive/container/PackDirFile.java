@@ -34,12 +34,13 @@ public class PackDirFile extends ArchiveFile {
   private int numFiles;
   private int numDirs;
   private boolean appendFiletype;
+  private int options;
 
   public PackDirFile(String filename) {
-    this(filename, true);
+    this(filename, true, 0);
   }
 
-  public PackDirFile(String filename, boolean appendFiletype) {
+  public PackDirFile(String filename, boolean appendFiletype, int options) {
     this.archiveFile = filename;
     this.entryList = new Vector<ArchiveEntry>();
     this.currentDir = "";
@@ -48,6 +49,7 @@ public class PackDirFile extends ArchiveFile {
     this.numFiles = 0;
     this.numDirs = 0;
     this.appendFiletype = appendFiletype;
+    this.options = options;
   }
 
   public byte[] getPasswd() {

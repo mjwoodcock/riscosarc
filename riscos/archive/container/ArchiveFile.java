@@ -13,6 +13,14 @@ import java.util.Enumeration;
 
 public abstract class ArchiveFile {
 
+  /** Ignore corrupt ZipEntry data in .zip files.
+   * Some old .zip files have corrupt entry data.
+   * Set this bit in the options argument to the ZipFileWrapper or
+   * ArchiveFileFactory constructors to ignore these bad entries.
+   * The corrupt entries will not be visible to the user.
+   */
+  public static final int IGNORE_BAD_ZIP_ENTRY_OPT = 1;
+
   /** Returns the password the user is using to open the archive file
    * @return the byte array of the password
    */

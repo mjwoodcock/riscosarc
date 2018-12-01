@@ -39,16 +39,18 @@ public class ArcFSFile extends ArchiveFile {
   private Vector<ArchiveEntry> entryList;
   private byte[] passwd;
   private boolean appendFiletype;
+  private int options;
 
   public ArcFSFile(String filename, String pass) {
-    this(filename, pass, true);
+    this(filename, pass, true, 0);
   }
 
-  public ArcFSFile(String filename, String pass, boolean appendFiletype) {
+  public ArcFSFile(String filename, String pass, boolean appendFiletype, int options) {
     this.archiveFile = filename;
     this.entryList = new Vector<ArchiveEntry>();
     this.currentDir = "";
     this.appendFiletype = appendFiletype;
+    this.options = options;
     if (pass != null) {
       this.passwd = pass.getBytes();
     }

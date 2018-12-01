@@ -24,6 +24,7 @@ public class riscosarc {
     System.err.println("  -c: extract console");
     System.err.println("  -d<path>: extract files to <path>");
     System.err.println("  -g<password>: set password to <password>");
+    System.err.println("  -i: ignore errors where possible");
     System.err.println("  -r: extract raw compressed data");
     System.err.println("  -v: verbose list contents of file");
     System.err.println("  -F: append RISC OS filetype to file name");
@@ -37,6 +38,7 @@ public class riscosarc {
     boolean extractRaw = false;
     boolean consoleOutput = false;
     boolean appendFiletype = false;
+    int options = 0;
     String outputDirectory = ".";
     String password = null;
     String suffix = "";
@@ -55,6 +57,8 @@ public class riscosarc {
         outputDirectory = args[i].substring(2);
       } else if (args[i].startsWith("-g")) {
         password = args[i].substring(2);
+      } else if (args[i].startsWith("-i")) {
+        options = ArchiveFile.IGNORE_BAD_ZIP_ENTRY_OPT;
       } else if (args[i].equals("-l")) {
         doList = true;
       } else if (args[i].equals("-r")) {
@@ -86,7 +90,8 @@ public class riscosarc {
     ArchiveFileFactory aff;
     ArchiveFile af;
     try {
-      aff = new ArchiveFileFactory(args[archiveFileArg], password, appendFiletype);
+      aff = new ArchiveFileFactory(args[archiveFileArg], password,
+                                   appendFiletype, options);
       af = aff.getArchiveFile();
       ent = af.entries();
     } catch (Exception ex) {
