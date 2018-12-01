@@ -10,6 +10,12 @@ import java.io.IOException;
 public class ArchiveFileFactory {
 
   private ArchiveFile archive;
+  private static final int[] readerFiletypes = {0x3fb, 0x68e, 0xd96, 0xddc, 0xfca};
+  private static final String[] readerFormatNames = {"ArcFS",
+                                                     "PackDir",
+                                                     "CFS",
+                                                     "Spark/ZIP/MSDOS Arc",
+                                                     "RISC OS Squash"};
 
   /** Constructs an ArchiveFileFactory to open a file without a
    * password.  RISC OS filetype information will be appended to the
@@ -117,5 +123,19 @@ public class ArchiveFileFactory {
    */
   public ArchiveFile getArchiveFile() {
     return archive;
+  }
+
+  /** Gets A list of RISC OS filetypes this library supports.
+   * @return the filetype list
+   */
+  public static int[] getReaderFiletypes() {
+    return readerFiletypes;
+  }
+
+  /** Gets A list of human readable descriptions of containers that this library supports.
+   * @return the container name list
+   */
+  public static String[] getReaderFormatNames() {
+    return readerFormatNames;
   }
 }

@@ -28,6 +28,14 @@ public class riscosarc {
     System.err.println("  -r: extract raw compressed data");
     System.err.println("  -v: verbose list contents of file");
     System.err.println("  -F: append RISC OS filetype to file name");
+
+    System.err.println("Supported archive types are:");
+    String[] formats = ArchiveFileFactory.getReaderFormatNames();
+    int[] filetypes = ArchiveFileFactory.getReaderFiletypes();
+    for (int i = 0; i < formats.length && i < filetypes.length; i++) {
+      System.err.println("  " + Integer.toHexString(filetypes[i]) + ": " + formats[i]);
+    }
+
     System.exit(1);
   }
 
