@@ -44,7 +44,6 @@ public class SparkEntry extends ArchiveEntry {
     comptype = r & 0xff;
     if ((comptype & ~ARCHPACK) == 0) {
       comptype = SPARKFS_ENDDIR;
-      isEof = true;
       return;
     }
 
