@@ -27,6 +27,8 @@ public class riscosarc {
     System.err.println("  -i: ignore errors where possible");
     System.err.println("  -r: extract raw compressed data");
     System.err.println("  -v: verbose list contents of file");
+    System.err.println("  -D: don't set the timestamp on the extracted file");
+    System.err.println("  -T: make the extracted file timestamp match the archive");
     System.err.println("  -F: append RISC OS filetype to file name");
     System.err.println("  --delete-archive: delete archive after extraction");
 
@@ -48,6 +50,8 @@ public class riscosarc {
     boolean consoleOutput = false;
     boolean appendFiletype = false;
     boolean deleteArchive = false;
+    boolean doTimestamp = true;
+    boolean useArchiveTimestamp = false;
     int options = 0;
     String outputDirectory = ".";
     String password = null;
@@ -56,6 +60,7 @@ public class riscosarc {
     int archiveFileArg = -1;
     String fileToExtract = null;
     String archiveFilename = null;
+    long archiveTimestamp = 0;
 
     if (args.length < 2) {
       riscosarc.usage();
@@ -79,8 +84,12 @@ public class riscosarc {
         doVerbose = true;
       } else if (args[i].equals("-x")) {
         doExtract = true;
+      } else if (args[i].equals("-D")) {
+        doTimestamp = false;
       } else if (args[i].equals("-F")) {
         appendFiletype = true;
+      } else if (args[i].equals("-T")) {
+        useArchiveTimestamp = true;
       } else if (args[i].equals("--delete-archive")) {
         deleteArchive = true;
       } else if (args[i].charAt(0) == '-') {
@@ -104,6 +113,10 @@ public class riscosarc {
     ArchiveFile af;
     try {
       archiveFilename = args[archiveFileArg];
+      if (useArchiveTimestamp) {
+        File f = new File(archiveFilename);
+        archiveTimestamp = f.lastModified();
+      }
       aff = new ArchiveFileFactory(archiveFilename, password,
                                    appendFiletype, options);
       af = aff.getArchiveFile();
@@ -177,7 +190,13 @@ public class riscosarc {
                 fos.close();
               }
 
-              entry.setFileTime();
+              if (doTimestamp) {
+                if (useArchiveTimestamp) {
+                  entry.setFileTime(archiveTimestamp);
+                } else {
+                  entry.setFileTime();
+                }
+              }
             }
 
             if (!extractRaw && !crc.compare(entry.getCrcValue())) {

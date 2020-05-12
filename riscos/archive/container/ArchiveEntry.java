@@ -111,6 +111,15 @@ public class ArchiveEntry {
   }
 
   /**
+   * Stamps the file with a specific date stamp.
+   */
+  public void setFileTime(long timestamp) {
+    File f = new File(localFilename);
+
+    f.setLastModified(timestamp);
+  }
+
+  /**
    * Gets the RISC OS filetype from the RISC OS load value
    * @return the filetype
    */
