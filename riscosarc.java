@@ -26,6 +26,7 @@ public class riscosarc {
     System.err.println("            -d- to extract to dirname of archive file");
     System.err.println("  -g<password>: set password to <password>");
     System.err.println("  -i: ignore errors where possible");
+    System.err.println("  -n: don't overwrite files");
     System.err.println("  -r: extract raw compressed data");
     System.err.println("  -v: verbose list contents of file");
     System.err.println("  -D: don't set the timestamp on the extracted file");
@@ -45,6 +46,7 @@ public class riscosarc {
 
   public static void main(String[] args) {
     boolean doList = false;
+    boolean doOverwrite = true;
     boolean doVerbose = false;
     boolean doExtract = false;
     boolean extractRaw = false;
@@ -78,6 +80,8 @@ public class riscosarc {
         options = ArchiveFile.IGNORE_BAD_ZIP_ENTRY_OPT;
       } else if (args[i].equals("-l")) {
         doList = true;
+      } else if (args[i].equals("-n")) {
+        doOverwrite = false;
       } else if (args[i].equals("-r")) {
         extractRaw = true;
         suffix = ".raw";
@@ -148,7 +152,9 @@ public class riscosarc {
           continue;
         }
 
-        if (doExtract) {
+        if (doExtract && !doOverwrite && entry.fileExists(outputDirectory)) {
+          System.out.println("Not overwriting " + outputDirectory + File.separator +  entry.getLocalFilename());
+        } else if (doExtract) {
           CRC crc = af.getCRCInstance();
           crc.setDataLength(entry.getUncompressedLength());
           entry.cleanOldFile(outputDirectory);

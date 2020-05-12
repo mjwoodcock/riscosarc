@@ -66,6 +66,11 @@ public class ArchiveEntry {
     }
   }
 
+  public boolean fileExists(String prefix) {
+    File f = new File(prefix + File.separator + localFilename);
+
+    return f.exists();
+  }
   /**
    * Stamps the file with the correct date stamp.
    */
