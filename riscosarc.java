@@ -124,6 +124,9 @@ public class riscosarc {
       }
       if (outputDirectory.equals("-")) {
         outputDirectory = f.getParent();
+        if (outputDirectory == null) {
+          outputDirectory = ".";
+        }
       }
       aff = new ArchiveFileFactory(archiveFilename, password,
                                    appendFiletype, options);
