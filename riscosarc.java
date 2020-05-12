@@ -105,7 +105,7 @@ public class riscosarc {
       }
     }
 
-    if (!(doExtract || doList) || archiveFileArg == -1) {
+    if (!(doExtract || doList || doVerbose) || archiveFileArg == -1) {
       riscosarc.usage();
     }
 
