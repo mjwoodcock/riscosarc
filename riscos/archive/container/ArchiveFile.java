@@ -41,6 +41,11 @@ public abstract class ArchiveFile {
    */
   public abstract void openForRead() throws IOException, InvalidArchiveFile;
 
+  /** Closes the archive file
+   * file
+   */
+  public abstract void close() throws IOException;
+
   /** Gets this ArchiveFile's list of ArchiveEntry instances
    * @return All the ArchiveEntry instances for the ArchiveFile
    */

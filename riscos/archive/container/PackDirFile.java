@@ -152,6 +152,13 @@ public class PackDirFile extends ArchiveFile {
     } while (dirEndtries[0] > 0);
   }
 
+  public void close() throws IOException{
+    if (this.inFile != null) {
+      this.inFile.close();
+      this.inFile = null;
+    }
+  }
+
   public Enumeration<ArchiveEntry> entries() {
     return entryList.elements();
   }

@@ -75,6 +75,13 @@ public class CFSFile extends ArchiveFile {
     }
   }
 
+  public void close() throws IOException {
+    if (this.inFile != null) {
+      this.inFile.close();
+      this.inFile = null;
+    }
+  }
+
   public Enumeration<ArchiveEntry> entries() {
     return this.entryList.elements();
   }

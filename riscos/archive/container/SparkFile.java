@@ -100,7 +100,7 @@ public class SparkFile extends ArchiveFile {
   }
 
   public void openForRead() throws IOException, InvalidArchiveFile {
-    inFile = new RandomAccessInputStream(archiveFile);
+    this.inFile = new RandomAccessInputStream(archiveFile);
 
     readHeader();
 
@@ -138,6 +138,13 @@ public class SparkFile extends ArchiveFile {
         break;
       }
     } while (true);
+  }
+
+  public void close() throws IOException {
+    if (this.inFile != null) {
+      this.inFile.close();
+      this.inFile = null;
+    }
   }
 
   public Enumeration<ArchiveEntry> entries() {

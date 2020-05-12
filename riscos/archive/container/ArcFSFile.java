@@ -121,7 +121,7 @@ public class ArcFSFile extends ArchiveFile {
   }
 
   public void openForRead() throws IOException, InvalidArchiveFile {
-    inFile = new RandomAccessInputStream(archiveFile);
+    this.inFile = new RandomAccessInputStream(archiveFile);
 
     readHeader();
     readArcfsHeader();
@@ -158,6 +158,13 @@ public class ArcFSFile extends ArchiveFile {
       } catch (IOException e) {
         System.err.println(e.toString());
       }
+    }
+  }
+
+  public void close() throws IOException {
+    if (this.inFile != null) {
+      this.inFile.close();
+      this.inFile = null;
     }
   }
 

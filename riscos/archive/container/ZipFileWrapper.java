@@ -68,6 +68,13 @@ public class ZipFileWrapper extends ArchiveFile {
     }
   }
 
+  public void close() throws IOException {
+    if (this.zipFile != null) {
+      this.zipFile.close();
+      this.zipFile = null;
+    }
+  }
+
   public Enumeration<ArchiveEntry> entries() {
     return this.entryList.elements();
   }
