@@ -58,8 +58,8 @@ public class ArchiveEntry {
   /**
    * Deletes a stale file from the disk.
    */
-  public void cleanOldFile() {
-    File f = new File(localFilename);
+  public void cleanOldFile(String prefix) {
+    File f = new File(prefix + File.separator + localFilename);
 
     if (f.isFile()) {
       f.delete();

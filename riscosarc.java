@@ -151,7 +151,7 @@ public class riscosarc {
         if (doExtract) {
           CRC crc = af.getCRCInstance();
           crc.setDataLength(entry.getUncompressedLength());
-          entry.cleanOldFile();
+          entry.cleanOldFile(outputDirectory);
           entry.mkDir(outputDirectory);
           try {
             InputStream fis = null;
