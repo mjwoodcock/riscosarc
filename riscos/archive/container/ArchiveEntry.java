@@ -49,45 +49,10 @@ public class ArchiveEntry {
    * Calculates the file time from the RISC OS load and exec values
    */
   protected void calculateFileTime() {
-/*
-    long high = (load & 0xff) - 0x33 & 0xffffffffL;
-    long low;
-    long lexec = ((long)exec) & 0xffffffffL;
-
-    low = (lexec - 0x6e996a00L) & 0xffffffffL;
-    fileDate = (high * 42949673 + low / 100) & 0xffffffffL;
-    fileDate *= 1000;
-*/
-/*
-    long t1 = ((long)exec) & 0xffffffffL;
-    long t2 = ((long)load) & 0xff;
-
-    System.out.println("mjw... load " + Long.toHexString(load));
-    System.out.println("mjw... exec " + Long.toHexString(exec));
-    System.out.println("mjw... t1 " + Long.toHexString(t1));
-    long tc = 0x6e996a00L;
-    System.out.println("mjw... tc " + Long.toHexString(tc));
-    if (t1 < tc)
-      t2--;
-    t1 -= tc;
-    t1 &= 0xffffffffL;
-    System.out.println("mjw... t1 " + Long.toHexString(t1));
-    t2 -= 0x33;
-    t2 &= 0xffffffffL;
-    System.out.println("mjw... " + Long.toHexString(t2));
-
-    t1 = (t1 / 100) + (t2 * 42949673L);
-    t1 &= 0xffffffffL;
-    System.out.println("mjw... " + Long.toHexString(t1));
-    fileDate = t1 - t2;
-    fileDate *= 1000;
-    System.out.println("mjw... " + localFilename + " " + Long.toHexString(fileDate));
-*/
     long dt = (((long)load & 0xff) << 32) + exec;
     dt -= 0x336E996A00L;
     dt *= 10;
     fileDate = dt;
-    System.out.println("mjw... " + localFilename + " " + Long.toHexString(fileDate));
   }
 
   /**
