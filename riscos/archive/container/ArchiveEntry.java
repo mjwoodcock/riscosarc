@@ -69,17 +69,15 @@ public class ArchiveEntry {
   /**
    * Stamps the file with the correct date stamp.
    */
-  public void setFileTime() {
-    File f = new File(localFilename);
-
-    f.setLastModified(fileDate);
+  public void setFileTime(String prefix) {
+    setFileTime(prefix, fileDate);
   }
 
   /**
    * Stamps the file with a specific date stamp.
    */
-  public void setFileTime(long timestamp) {
-    File f = new File(localFilename);
+  public void setFileTime(String prefix, long timestamp) {
+    File f = new File(prefix + File.separator + localFilename);
 
     f.setLastModified(timestamp);
   }

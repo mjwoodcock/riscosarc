@@ -23,6 +23,7 @@ public class riscosarc {
     System.err.println("  argument can be:");
     System.err.println("  -c: extract console");
     System.err.println("  -d<path>: extract files to <path>");
+    System.err.println("            -d- to extract to dirname of archive file");
     System.err.println("  -g<password>: set password to <password>");
     System.err.println("  -i: ignore errors where possible");
     System.err.println("  -r: extract raw compressed data");
@@ -113,9 +114,12 @@ public class riscosarc {
     ArchiveFile af;
     try {
       archiveFilename = args[archiveFileArg];
+      File f = new File(archiveFilename);
       if (useArchiveTimestamp) {
-        File f = new File(archiveFilename);
         archiveTimestamp = f.lastModified();
+      }
+      if (outputDirectory.equals("-")) {
+        outputDirectory = f.getParent();
       }
       aff = new ArchiveFileFactory(archiveFilename, password,
                                    appendFiletype, options);
@@ -192,9 +196,9 @@ public class riscosarc {
 
               if (doTimestamp) {
                 if (useArchiveTimestamp) {
-                  entry.setFileTime(archiveTimestamp);
+                  entry.setFileTime(outputDirectory, archiveTimestamp);
                 } else {
-                  entry.setFileTime();
+                  entry.setFileTime(outputDirectory);
                 }
               }
             }
