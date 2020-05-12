@@ -28,6 +28,7 @@ public class riscosarc {
     System.err.println("  -r: extract raw compressed data");
     System.err.println("  -v: verbose list contents of file");
     System.err.println("  -F: append RISC OS filetype to file name");
+    System.err.println("  --delete-archive: delete archive after extraction");
 
     System.err.println("Supported archive types are:");
     String[] formats = ArchiveFileFactory.getReaderFormatNames();
@@ -46,6 +47,7 @@ public class riscosarc {
     boolean extractRaw = false;
     boolean consoleOutput = false;
     boolean appendFiletype = false;
+    boolean deleteArchive = false;
     int options = 0;
     String outputDirectory = ".";
     String password = null;
@@ -53,6 +55,7 @@ public class riscosarc {
     boolean error = false;
     int archiveFileArg = -1;
     String fileToExtract = null;
+    String archiveFilename = null;
 
     if (args.length < 2) {
       riscosarc.usage();
@@ -78,6 +81,8 @@ public class riscosarc {
         doExtract = true;
       } else if (args[i].equals("-F")) {
         appendFiletype = true;
+      } else if (args[i].equals("--delete-archive")) {
+        deleteArchive = true;
       } else if (args[i].charAt(0) == '-') {
         riscosarc.usage();
       } else {
@@ -98,7 +103,8 @@ public class riscosarc {
     ArchiveFileFactory aff;
     ArchiveFile af;
     try {
-      aff = new ArchiveFileFactory(args[archiveFileArg], password,
+      archiveFilename = args[archiveFileArg];
+      aff = new ArchiveFileFactory(archiveFilename, password,
                                    appendFiletype, options);
       af = aff.getArchiveFile();
       ent = af.entries();
@@ -193,6 +199,18 @@ public class riscosarc {
 
     if (error) {
       System.exit(1);
+    } else if (deleteArchive && doExtract) {
+      try {
+        if (af != null) {
+          af.close();
+        }
+        File arc = new File(archiveFilename);
+        if (arc.delete() == false) {
+          System.out.println("Failed to delete " + archiveFilename);
+        }
+      } catch (IOException e) {
+        System.out.println("Failed to close file");
+      }
     }
   }
 }
