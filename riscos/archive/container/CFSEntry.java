@@ -40,13 +40,13 @@ public class CFSEntry extends ArchiveEntry {
 
     inFile.seek(offset);
 
-    complen = (int)(this.fileLength - seek);
     origlen = this.cfsFile.read32();
     this.cfsFile.read32();
     load = this.cfsFile.read32();
     exec = this.cfsFile.read32();
 
     seek = inFile.getFilePointer();
+    complen = (int)(this.fileLength - seek);
     calculateFileTime();
     appendFiletype();
   }

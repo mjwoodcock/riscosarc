@@ -6,10 +6,10 @@ package riscos.archive;
 /* Code taken from David Pilling's FileShrinker code from
  * https://www.davidpilling.com/wiki/index.php/FileShrinker */
 
-/* FIXME: Implement ZEROBLOCK */
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 public class CFSInputStream extends FilterInputStream {
 
@@ -80,6 +80,20 @@ public class CFSInputStream extends FilterInputStream {
       this.srcBufferEnd += r;
     }
 
+  }
+
+  private void zeroSrcBuffer() throws IOException {
+    if (this.srcBufferI > 0) {
+      System.arraycopy(this.srcBuffer, this.srcBufferI,
+                       this.srcBuffer, 0,
+                       this.srcBufferEnd - this.srcBufferI);
+      this.srcBufferEnd -= this.srcBufferI;
+      this.srcBufferIF -= this.srcBufferI;
+      this.srcBufferI = 0;
+    }
+    Arrays.fill(this.srcBuffer, this.srcBufferI,
+                this.srcBuffer.length - this.srcBufferEnd, (byte)0);
+    this.srcBufferEnd = srcBuffer.length;
   }
 
   private void addCharToBlockBuffer(int chr) {
@@ -249,7 +263,10 @@ public class CFSInputStream extends FilterInputStream {
       }
       copySrcToBlockBuffer(this.codelimit);
     } else if (this.blocktype == ZEROBLOCK) {
-      System.out.println("ZEROBLOCK not handled");
+      if (this.srcBufferEnd - this.srcBufferI < this.codelimit) {
+        zeroSrcBuffer();
+      }
+      copySrcToBlockBuffer(this.codelimit);
     } else if (this.blocktype == ENDBLOCK) {
       return -1;
     } else {
