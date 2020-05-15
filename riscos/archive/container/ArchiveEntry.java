@@ -49,10 +49,9 @@ public class ArchiveEntry {
    * Calculates the file time from the RISC OS load and exec values
    */
   protected void calculateFileTime() {
-    long dt = (((long)load & 0xff) << 32) + exec;
-    dt -= 0x336E996A00L;
-    dt *= 10;
-    fileDate = dt;
+    long date = (((long)load & 0x000000ff) << 32) + ((long)exec & 0xffffffff);
+    long mktime = ((date / 100) - 0x83AA7E80) & 0x00000000ffffffffL;
+    fileDate = mktime * 1000;
   }
 
   /**
@@ -107,7 +106,7 @@ public class ArchiveEntry {
     if (doAppendFiletype) {
       if ((load & 0xfff00000) == 0xfff00000) {
         int filetype = (load >> 8) & 0xfff;
-        localFilename += "," + Integer.toHexString(filetype);
+        localFilename += "," + String.format("%03x", filetype);
       }
     }
   }
