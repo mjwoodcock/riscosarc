@@ -114,8 +114,8 @@ public class riscosarc {
     }
 
     Enumeration<ArchiveEntry> ent = null;
-    ArchiveFileFactory aff;
-    ArchiveFile af;
+    ArchiveFileFactory aff = null;
+    ArchiveFile af = null;
     try {
       archiveFilename = args[archiveFileArg];
       File f = new File(archiveFilename);
@@ -132,13 +132,16 @@ public class riscosarc {
                                    appendFiletype, options);
       af = aff.getArchiveFile();
       ent = af.entries();
+    } catch (FileNotFoundException ex) {
+      System.err.println("Can not open archive file: " + archiveFilename);
+      System.exit(1);
     } catch (Exception ex) {
       error = true;
       af = null;
     }
 
     if (ent == null) {
-      System.err.println("Invalid archive file");
+      System.err.println("Invalid archive file: " + archiveFilename);
       System.exit(1);
     }
 

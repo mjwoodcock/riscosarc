@@ -5,6 +5,8 @@ package riscos.archive.container;
 import riscos.archive.InvalidArchiveFile;
 import riscos.archive.container.ArchiveFile;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class ArchiveFileFactory {
@@ -59,7 +61,13 @@ public class ArchiveFileFactory {
   public ArchiveFileFactory(String filename, String pass,
                             boolean appendFiletype,
                             int options) throws IOException,
-                                                InvalidArchiveFile {
+                                                InvalidArchiveFile,
+                                                FileNotFoundException {
+    File f = new File(filename);
+    if (!f.exists()) {
+      throw new FileNotFoundException("");
+    }
+
     try {
       SparkFile sfs = new SparkFile(filename, pass, appendFiletype, options);
       sfs.openForRead();
