@@ -27,6 +27,7 @@ Files are extracted with the RISC OS filetype appended to the name.
 
 There is precious little documentation, and probably no comments in the code.
 
-## To Build
+## To Build on Linux
 
-javac riscosarc.java
+./build.sh
+
