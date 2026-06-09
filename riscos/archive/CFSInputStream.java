@@ -187,9 +187,14 @@ public class CFSInputStream extends FilterInputStream {
         this.blocktype = ENDBLOCK;
         return;
       }
-      this.codelimit = getChar();
-      this.codelimit |= getChar() << 8;
-      this.codelimit |= getChar() << 16;
+      int cl0 = getChar();
+      int cl1 = getChar();
+      int cl2 = getChar();
+      if (cl0 == -1 || cl1 == -1 || cl2 == -1) {
+        this.blocktype = ENDBLOCK;
+        return;
+      }
+      this.codelimit = cl0 | (cl1 << 8) | (cl2 << 16);
       if (this.blocktype == COMPRESSEDBLOCK) {
         this.codelimit += 0xff;
       }
