@@ -65,11 +65,9 @@ public class ArcFSEntry extends ArchiveEntry {
     complen = arcFile.read32();
     int infoWord = arcFile.read32();
     seek = (infoWord & 0x7fffffff) + dataStart;
-    if (((infoWord >> 31) & 0x1) != 0) {
-      isDir = true;
-    } else {
-      isDir = false;
-    }
+    isDir = ((infoWord & 0x80000000) != 0)
+        && origlen == 0xffffffff
+        && complen == 0xffffffff;
     appendFiletype();
     calculateFileTime();
     nextEntryOffset = inFile.getFilePointer();
