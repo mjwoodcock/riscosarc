@@ -34,7 +34,8 @@ public class SparkFile extends ArchiveFile {
   public static final int CT_SQUASH = 0x09;
   public static final int CT_COMP = 0x7f;
 
-  private static final byte SPARKFS_STARTBYTE = 0x1a;
+  public static final int SPARKFS_STARTBYTE = 0x1a;
+
   private RandomAccessInputStream inFile;
   private String archiveFile;
   private int headerLength;
