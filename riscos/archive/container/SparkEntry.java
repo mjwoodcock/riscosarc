@@ -33,12 +33,16 @@ public class SparkEntry extends ArchiveEntry {
     isEof = false;
   }
 
-  /* Directories carry the RISC OS "archive" filetype (&DDC), and so do plain
-   * files which happen to be archives themselves -- the two are identical as
-   * far as the entry header goes. A directory's data is a run of Spark
-   * entries, so peek at the first byte and only believe the filetype if it
-   * looks like the start of one. */
-  private boolean dataStartsWithEntry() throws IOException {
+  /* A directory's data is a plain, uncompressed run of Spark entries, and it
+   * carries the RISC OS "archive" filetype (&DDC). So does a plain file which
+   * happens to be an archive itself though, and for a stored one the entry
+   * headers are then identical -- so also peek at the first byte of the data
+   * and only believe the filetype if it looks like the start of an entry. */
+  private boolean isDirectoryEntry() throws IOException {
+    if (comptype != SparkFile.CT_NOTCOMP2 || (load & 0xffffff00) != 0xfffddc00) {
+      return false;
+    }
+
     long pos = inFile.getFilePointer();
     int b = inFile.read();
     inFile.seek(pos);
@@ -104,7 +108,7 @@ public class SparkEntry extends ArchiveEntry {
     }
     comptype &= ~ARCHPACK;
     seek = (int)inFile.getFilePointer();
-    if ((load & 0xffffff00) == 0xfffddc00 && dataStartsWithEntry()) {
+    if (isDirectoryEntry()) {
       isDir = true;
     }
     if (isDir) {
