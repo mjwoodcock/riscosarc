@@ -142,6 +142,14 @@ public class SparkEntry extends ArchiveEntry {
     return isEof;
   }
 
+  /** Reinterprets a directory entry as a plain file. Used when the entry's
+   * contents turn out not to be a directory after all.
+   */
+  public void demoteToFile() {
+    isDir = false;
+    nextEntyOffset = seek + complen + 1;
+  }
+
   public long getNextEntryOffset() {
     return nextEntyOffset;
   }
