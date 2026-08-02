@@ -42,6 +42,10 @@ public class RandomAccessInputStream extends InputStream {
     return raf.skipBytes((int)bytesToSkip);
   }
 
+  public long length() throws IOException {
+    return raf.length();
+  }
+
   public long getFilePointer() throws IOException {
     return raf.getFilePointer();
   }

@@ -33,6 +33,23 @@ public class SparkEntry extends ArchiveEntry {
     isEof = false;
   }
 
+  /* A directory's data is a plain, uncompressed run of Spark entries, and it
+   * carries the RISC OS "archive" filetype (&DDC). So does a plain file which
+   * happens to be an archive itself though, and for a stored one the entry
+   * headers are then identical -- so also peek at the first byte of the data
+   * and only believe the filetype if it looks like the start of an entry. */
+  private boolean isDirectoryEntry() throws IOException {
+    if (comptype != SparkFile.CT_NOTCOMP2 || (load & 0xffffff00) != 0xfffddc00) {
+      return false;
+    }
+
+    long pos = inFile.getFilePointer();
+    int b = inFile.read();
+    inFile.seek(pos);
+
+    return b == SparkFile.SPARKFS_STARTBYTE;
+  }
+
   private void readSparkEntry(String curDir) throws IOException, InvalidSparkFile {
     int r = inFile.read();
 
@@ -91,7 +108,7 @@ public class SparkEntry extends ArchiveEntry {
     }
     comptype &= ~ARCHPACK;
     seek = (int)inFile.getFilePointer();
-    if ((load & 0xffffff00) == 0xfffddc00) {
+    if (isDirectoryEntry()) {
       isDir = true;
     }
     if (isDir) {
@@ -127,6 +144,14 @@ public class SparkEntry extends ArchiveEntry {
 
   public boolean isEof() {
     return isEof;
+  }
+
+  /** Reinterprets a directory entry as a plain file. Used when the entry's
+   * contents turn out not to be a directory after all.
+   */
+  public void demoteToFile() {
+    isDir = false;
+    nextEntyOffset = seek + complen + 1;
   }
 
   public long getNextEntryOffset() {

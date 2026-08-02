@@ -18,6 +18,7 @@ import riscos.archive.UnsupportedLZWType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -34,7 +35,8 @@ public class SparkFile extends ArchiveFile {
   public static final int CT_SQUASH = 0x09;
   public static final int CT_COMP = 0x7f;
 
-  private static final byte SPARKFS_STARTBYTE = 0x1a;
+  public static final int SPARKFS_STARTBYTE = 0x1a;
+
   private RandomAccessInputStream inFile;
   private String archiveFile;
   private int headerLength;
@@ -99,48 +101,113 @@ public class SparkFile extends ArchiveFile {
     }
   }
 
+  /** A directory the scan has descended into, along with everything needed
+   * to back out of it again if its contents turn out to be something else.
+   */
+  private static class DirScan {
+    private final SparkEntry entry;
+    private final long endOffset;
+    private final int entryListMark;
+    private final String parentDir;
+
+    DirScan(SparkEntry entry, long endOffset, int entryListMark, String parentDir) {
+      this.entry = entry;
+      this.endOffset = endOffset;
+      this.entryListMark = entryListMark;
+      this.parentDir = parentDir;
+    }
+  }
+
+  /** Backs out of a directory whose contents did not match its recorded
+   * length, discards whatever was found inside it and reinterprets it as a
+   * plain file.
+   * @param dirStack the directories the scan is currently inside
+   * @return the offset to carry on scanning from
+   */
+  private long abandonDirectory(ArrayDeque<DirScan> dirStack) {
+    DirScan dir = dirStack.pop();
+
+    System.err.println("Warning: contents of '" + dir.entry.getName()
+        + "' do not match its recorded length, treating it as a file");
+
+    entryList.setSize(dir.entryListMark);
+    currentDir = dir.parentDir;
+    dir.entry.demoteToFile();
+    entryList.add(dir.entry);
+
+    return dir.entry.getNextEntryOffset();
+  }
+
   public void openForRead() throws IOException, InvalidArchiveFile {
     this.inFile = new RandomAccessInputStream(archiveFile);
+    long fileLength = inFile.length();
 
     readHeader();
 
+    ArrayDeque<DirScan> dirStack = new ArrayDeque<DirScan>();
     long offset = 1;
     do {
+      /* A directory entry records the length of its contents, so a scan
+       * which runs past that end has gone wrong -- either the archive is
+       * damaged, or the entry was never a directory in the first place.
+       * Unwind it rather than letting it derail the rest of the archive. */
+      if (!dirStack.isEmpty() && offset >= dirStack.peek().endOffset) {
+        offset = abandonDirectory(dirStack);
+        continue;
+      }
+
       SparkEntry fse = new SparkEntry(this, inFile, dataStart, appendFiletype);
       try {
         fse.readEntry(currentDir, offset);
-        if (fse.isEof()) {
-          break;
-        }
-        if (fse.getCompressType() == SparkEntry.SPARKFS_ENDDIR) {
-          int idx = currentDir.lastIndexOf('/');
-          if (idx > -1) {
-            currentDir = currentDir.substring(0, idx);
-          } else {
-            if (currentDir.isEmpty()) {
-              break;  // end-of-archive marker at outermost level
-            }
-            currentDir = "";
-          }
-          offset += 2;
-          continue;
-        } else {
-          if (fse.isDir()) {
-            if (currentDir != "") {
-              currentDir = currentDir + "/" + fse.getName();
-            } else {
-              currentDir = fse.getName();
-            }
-          } else {
-            entryList.add(fse);
-          }
-        }
-        offset = fse.getNextEntryOffset();
       } catch (Exception e) {
         System.err.println(e.toString());
+        if (dirStack.isEmpty()) {
+          break;
+        }
+        offset = abandonDirectory(dirStack);
+        continue;
+      }
+
+      if (fse.isEof()) {
         break;
       }
+
+      if (fse.getCompressType() == SparkEntry.SPARKFS_ENDDIR) {
+        if (dirStack.isEmpty()) {
+          break;  // end-of-archive marker at outermost level
+        }
+        offset += 2;
+        if (offset == dirStack.peek().endOffset) {
+          currentDir = dirStack.pop().parentDir;
+        } else {
+          offset = abandonDirectory(dirStack);
+        }
+        continue;
+      }
+
+      long dirEnd = fse.getNextEntryOffset() + fse.getCompressedLength();
+      if (fse.isDir() && dirEnd <= fileLength) {
+        dirStack.push(new DirScan(fse, dirEnd, entryList.size(), currentDir));
+        if (currentDir.isEmpty()) {
+          currentDir = fse.getName();
+        } else {
+          currentDir = currentDir + "/" + fse.getName();
+        }
+      } else {
+        if (fse.isDir()) {
+          /* Claims to be a directory, but its contents do not fit in the
+           * archive. */
+          fse.demoteToFile();
+        }
+        entryList.add(fse);
+      }
+      offset = fse.getNextEntryOffset();
     } while (true);
+
+    if (!dirStack.isEmpty()) {
+      System.err.println("Warning: archive ends inside directory '"
+          + dirStack.peek().entry.getName() + "'");
+    }
   }
 
   public void close() throws IOException {
